@@ -12,9 +12,9 @@ C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\
 C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\bin\Debug\MultyClientChatApp.exe
 C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\bin\Debug\MultyClientChatApp.pdb
 C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\obj\Debug\MultyClientChatApp.csprojAssemblyReference.cache
-C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\obj\Debug\MultyClientChatApp.Form1.resources
 C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\obj\Debug\MultyClientChatApp.Properties.Resources.resources
 C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\obj\Debug\MultyClientChatApp.csproj.GenerateResource.cache
 C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\obj\Debug\MultyClientChatApp.csproj.CoreCompileInputs.cache
 C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\obj\Debug\MultyClientChatApp.exe
 C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\obj\Debug\MultyClientChatApp.pdb
+C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\MultyClientChatApp\obj\Debug\MultyClientChatApp.MultyChatApp.resources
