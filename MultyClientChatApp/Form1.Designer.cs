@@ -30,12 +30,12 @@
         {
             this.sendMsgBtn = new System.Windows.Forms.Button();
             this.btnListen = new System.Windows.Forms.Button();
-            this.chatBox = new System.Windows.Forms.TextBox();
             this.txtServerIp = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.button3 = new System.Windows.Forms.Button();
+            this.connectButton = new System.Windows.Forms.Button();
             this.msgBox = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.chatBox = new System.Windows.Forms.ListBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -57,17 +57,7 @@
             this.btnListen.TabIndex = 1;
             this.btnListen.Text = "listen";
             this.btnListen.UseVisualStyleBackColor = true;
-            this.btnListen.Click += new System.EventHandler(this.button2_Click);
-            // 
-            // chatBox
-            // 
-            this.chatBox.Location = new System.Drawing.Point(32, 54);
-            this.chatBox.Multiline = true;
-            this.chatBox.Name = "chatBox";
-            this.chatBox.Size = new System.Drawing.Size(575, 320);
-            this.chatBox.TabIndex = 2;
-            this.chatBox.Text = "Lets chat!";
-            this.chatBox.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            this.btnListen.Click += new System.EventHandler(this.BtnListen);
             // 
             // txtServerIp
             // 
@@ -88,15 +78,15 @@
             this.label2.Text = "server IP";
             this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
-            // button3
+            // connectButton
             // 
-            this.button3.Location = new System.Drawing.Point(17, 84);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(120, 24);
-            this.button3.TabIndex = 6;
-            this.button3.Text = "btnConnect";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.connectButton.Location = new System.Drawing.Point(17, 84);
+            this.connectButton.Name = "connectButton";
+            this.connectButton.Size = new System.Drawing.Size(120, 24);
+            this.connectButton.TabIndex = 6;
+            this.connectButton.Text = "btnConnect";
+            this.connectButton.UseVisualStyleBackColor = true;
+            this.connectButton.Click += new System.EventHandler(this.BtnConnect);
             // 
             // msgBox
             // 
@@ -111,7 +101,7 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.button3);
+            this.groupBox1.Controls.Add(this.connectButton);
             this.groupBox1.Controls.Add(this.txtServerIp);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Location = new System.Drawing.Point(613, 145);
@@ -122,14 +112,24 @@
             this.groupBox1.Text = "Connect to the server";
             this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
             // 
+            // chatBox
+            // 
+            this.chatBox.FormattingEnabled = true;
+            this.chatBox.ItemHeight = 16;
+            this.chatBox.Location = new System.Drawing.Point(12, 12);
+            this.chatBox.Name = "chatBox";
+            this.chatBox.Size = new System.Drawing.Size(595, 372);
+            this.chatBox.TabIndex = 9;
+            this.chatBox.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
+            // 
             // MultyChatApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.msgBox);
             this.Controls.Add(this.chatBox);
+            this.Controls.Add(this.msgBox);
             this.Controls.Add(this.btnListen);
             this.Controls.Add(this.sendMsgBtn);
             this.Controls.Add(this.groupBox1);
@@ -147,12 +147,12 @@
 
         private System.Windows.Forms.Button sendMsgBtn;
         private System.Windows.Forms.Button btnListen;
-        private System.Windows.Forms.TextBox chatBox;
         private System.Windows.Forms.TextBox txtServerIp;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button connectButton;
         private System.Windows.Forms.TextBox msgBox;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.ListBox chatBox;
     }
 }
 
