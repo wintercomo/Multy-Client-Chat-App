@@ -5,8 +5,6 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
 
-public delegate string myDelegate(string s);
-
 delegate void AddMessageDelegate(string n);
 namespace MultyClientChatApp
 {
@@ -16,7 +14,6 @@ namespace MultyClientChatApp
         List<string> _items = new List<string>();
         private TcpClient tcpClient;
         NetworkStream networkStream;
-        delegate void Del(string str);
 
         // Declare a method with the same signature as the delegate.
         static void Notify(string name)
@@ -71,6 +68,8 @@ namespace MultyClientChatApp
                 String server = "127.0.0.1";
                 Int32 port = 9000;
                 tcpClient = new TcpClient(server, port);
+                thread = new Thread(new ThreadStart(ReceiveData));
+                thread.Start();
 
             }
             catch (ArgumentNullException err)
@@ -145,8 +144,8 @@ namespace MultyClientChatApp
                 data = System.Text.Encoding.ASCII.GetBytes("bye");
                 networkStream.Write(data, 0, data.Length);
 
-                networkStream.Close();
-                tcpClient.Close();
+                //networkStream.Close();
+                //tcpClient.Close();
                 newMessage("Connection closed!");
             }
 
