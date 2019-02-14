@@ -68,6 +68,8 @@ namespace MultyClientChatApp
                 String server = "127.0.0.1";
                 Int32 port = 9000;
                 tcpClient = new TcpClient(server, port);
+                // EDIT
+                networkStream = tcpClient.GetStream();
                 thread = new Thread(new ThreadStart(ReceiveData));
                 thread.Start();
 
@@ -140,15 +142,13 @@ namespace MultyClientChatApp
                     break;
                 }
                 newMessage(responseData);
-
+            }
                 data = System.Text.Encoding.ASCII.GetBytes("bye");
                 networkStream.Write(data, 0, data.Length);
 
                 //networkStream.Close();
                 //tcpClient.Close();
                 newMessage("Connection closed!");
-            }
-
             }
             catch (Exception err)
             {
