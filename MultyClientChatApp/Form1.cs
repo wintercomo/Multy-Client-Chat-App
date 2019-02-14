@@ -24,8 +24,6 @@ namespace MultyClientChatApp
         public MultyChatApp()
         {
             InitializeComponent();
-            _items.Add("One");
-            chatBox.DataSource = _items;
         }
 
         private void btnSend(object sender, EventArgs e)
@@ -34,9 +32,6 @@ namespace MultyClientChatApp
             data = System.Text.Encoding.ASCII.GetBytes(msgBox.Text);
             networkStream = tcpClient.GetStream();
             //PROBLEM: networkstream is null
-            _items.Add(networkStream.ToString());
-            chatBox.DataSource = null;
-            chatBox.DataSource = _items;
             networkStream.Write(data, 0, data.Length);
             sendMessage(msgBox.Text);
 
@@ -47,13 +42,11 @@ namespace MultyClientChatApp
             {
                 AddMessageDelegate addMessage = new AddMessageDelegate(AddMessage);
                 // this is the delegate
-                this.Invoke(addMessage, _items, message);
+                this.Invoke(addMessage, new object[] { message });
             }
             else
             {
-                _items.Add(message);
-                chatBox.DataSource = null;
-                chatBox.DataSource = _items;
+                chatBox.Items.Add(message);
             }
 
         }
@@ -61,18 +54,16 @@ namespace MultyClientChatApp
         {
             try
             {
-                _items.Add("connecting...");
-                chatBox.DataSource = null;
-                chatBox.DataSource = _items;
-                Console.WriteLine("Trying to connect");
-                String server = "127.0.0.1";
+                sendMessage("Connecting...");
+                String server = txtServerIp.Text;
                 Int32 port = 9000;
                 tcpClient = new TcpClient(server, port);
                 // EDIT
                 networkStream = tcpClient.GetStream();
                 thread = new Thread(new ThreadStart(ReceiveData));
                 thread.Start();
-
+                // when connected. disable the button
+                btnListen.Enabled = false;
             }
             catch (ArgumentNullException err)
             {
@@ -88,24 +79,15 @@ namespace MultyClientChatApp
         {
             try
             {
-               
-                Int32 port = 9000;
-                IPAddress localAddr = IPAddress.Any;
-                TcpListener tcpListner = new TcpListener(localAddr, port);
+                TcpListener tcpListner = new TcpListener(IPAddress.Any, 9000);
                 tcpListner.Start();
-                this._items.Add("Listening for a client");
-                this.chatBox.DataSource = null;
-                this.chatBox.DataSource = _items;
+                sendMessage("Listening for a client");
                 while (true)
                 {
                     tcpClient = tcpListner.AcceptTcpClient();
-                    thread = new Thread(new ThreadStart(ReceiveData));
+                    thread = new Thread(() => { ReceiveData(); });
                     thread.Start();
                 }
-                Console.WriteLine("Stopping server");
-                tcpListner.Stop();
-
-
             }
             catch (SocketException e)
             {
@@ -116,39 +98,36 @@ namespace MultyClientChatApp
         }
         public void AddMessage(string message)
         {
-            _items.Add(message);
-            chatBox.DataSource = null;
-            chatBox.DataSource = _items;
+            chatBox.Items.Add(message);
         }
         public void ReceiveData()
         {
             try
             {
-            int i;
-            string s;
-            byte[] data = new byte[1024];
-            AddMessageDelegate newMessage = new AddMessageDelegate(AddMessage);
-            newMessage("Connected!");
-            while (true)
-            {
-                String responseData = String.Empty;
-                data = new Byte[256];
-                networkStream = tcpClient.GetStream();
-                Int32 bytes = networkStream.Read(data, 0, data.Length);
-                responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                Console.WriteLine("Received: {0}", responseData);
-                if (responseData == "bye")
+                int i;
+                string s;
+                byte[] data = new byte[1024];
+                sendMessage("Connected!");
+                while (true)
                 {
-                    break;
+                    String responseData = String.Empty;
+                    data = new Byte[256];
+                    networkStream = tcpClient.GetStream();
+                    Int32 bytes = networkStream.Read(data, 0, data.Length);
+                    responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                    Console.WriteLine("Received: {0}", responseData);
+                    if (responseData == "bye")
+                    {
+                        break;
+                    }
+                    sendMessage(responseData);
                 }
-                newMessage(responseData);
-            }
                 data = System.Text.Encoding.ASCII.GetBytes("bye");
                 networkStream.Write(data, 0, data.Length);
 
-                //networkStream.Close();
-                //tcpClient.Close();
-                newMessage("Connection closed!");
+                networkStream.Close();
+                tcpClient.Close();
+                sendMessage("Connection closed!");
             }
             catch (Exception err)
             {
@@ -156,81 +135,15 @@ namespace MultyClientChatApp
                 throw err;
             }
         }
-        public static void ThreadCounter()
-        {
-            for (int i = 0; i < 10; i++)
-            {
-                Console.WriteLine("Current Thread : {0}",
-                Thread.CurrentThread.Name);
-                Console.WriteLine(i);
-                Thread.Sleep(1000);
-            }
-
-        }
+       
         private void BtnListen(object sender, EventArgs e)
         {
-            _items.Add("Starting server....");
-            chatBox.DataSource = null;
-            chatBox.DataSource = _items;
+            sendMessage("Starting server....");
+                    thread = new Thread(() => { ReceiveData(); });
+
             thread = new Thread(new ThreadStart(startServer));
             thread.Start();
-            //startServer();
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-        }
-
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void panel1_Paint(object sender, PaintEventArgs e)
-        {
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-
-
-        private static void delegateMethodInputString(String name)
-        {
-
-        }
-
-
-
-        private void textBox3_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void groupBox1_Enter(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
+            connectButton.Enabled = false;
         }
     }
 }

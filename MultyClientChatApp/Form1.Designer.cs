@@ -66,7 +66,7 @@
             this.txtServerIp.Name = "txtServerIp";
             this.txtServerIp.Size = new System.Drawing.Size(100, 22);
             this.txtServerIp.TabIndex = 3;
-            this.txtServerIp.TextChanged += new System.EventHandler(this.textBox2_TextChanged);
+            this.txtServerIp.Text = "127.0.0.1";
             // 
             // label2
             // 
@@ -76,7 +76,6 @@
             this.label2.Size = new System.Drawing.Size(64, 17);
             this.label2.TabIndex = 5;
             this.label2.Text = "server IP";
-            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // connectButton
             // 
@@ -97,7 +96,6 @@
             this.msgBox.Name = "msgBox";
             this.msgBox.Size = new System.Drawing.Size(528, 22);
             this.msgBox.TabIndex = 7;
-            this.msgBox.TextChanged += new System.EventHandler(this.textBox3_TextChanged);
             // 
             // groupBox1
             // 
@@ -110,23 +108,24 @@
             this.groupBox1.TabIndex = 8;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Connect to the server";
-            this.groupBox1.Enter += new System.EventHandler(this.groupBox1_Enter);
             // 
             // chatBox
             // 
+            this.chatBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.chatBox.FormattingEnabled = true;
-            this.chatBox.ItemHeight = 16;
-            this.chatBox.Location = new System.Drawing.Point(12, 12);
+            this.chatBox.ItemHeight = 20;
+            this.chatBox.Location = new System.Drawing.Point(12, 11);
+            this.chatBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.chatBox.Name = "chatBox";
-            this.chatBox.Size = new System.Drawing.Size(595, 372);
-            this.chatBox.TabIndex = 9;
-            this.chatBox.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
+            this.chatBox.Size = new System.Drawing.Size(595, 384);
+            this.chatBox.TabIndex = 10;
             // 
             // MultyChatApp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.chatBox);
             this.Controls.Add(this.msgBox);
@@ -135,7 +134,6 @@
             this.Controls.Add(this.groupBox1);
             this.Name = "MultyChatApp";
             this.Text = "Multy chat App";
-            this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
