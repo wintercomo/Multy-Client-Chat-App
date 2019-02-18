@@ -1,7 +1,9 @@
-﻿using System;
+﻿using ClassLibrary1;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -12,122 +14,168 @@ namespace MultyClientChatApp
     {
         private TcpClient tcpClient;
         NetworkStream networkStream;
+        ChatApp sharedFunctions = new ChatApp();
+        TcpListener tcpListner;
+        string ipAdress;
+        string portAdress;
 
-        // Declare a method with the same signature as the delegate.
-        static void Notify(string name)
-        {
-            Console.WriteLine("Notification received for: {0}", name);
-        }
 
         public MultyChatApp()
         {
             InitializeComponent();
+            ipAdress = txtServerIp.Text;
+            portAdress = portBox.Text;
         }
 
-        private void btnSend(object sender, EventArgs e)
+        private void BtnSend(object sender, EventArgs e)
         {
             byte[] data = new byte[1024];
             data = System.Text.Encoding.ASCII.GetBytes(msgBox.Text);
             networkStream = tcpClient.GetStream();
-            //PROBLEM: networkstream is null
             networkStream.Write(data, 0, data.Length);
-            sendMessage(msgBox.Text);
+            SendMessage(msgBox.Text);
 
         }
-        private void sendMessage(string message)
+        private void SendMessage(string message)
         {
             
             chatBox.Items.Add(message);
         }
-        private void BtnConnect(object sender, EventArgs e)
+        private async void BtnConnect(object sender, EventArgs e)
         {
             try
             {
-                sendMessage("Connecting...");
+                SendMessage("Connecting...");
+                if (!validateIP(txtServerIp.Text))
+                {
+                    SendMessage($"Given IP adress: {txtServerIp.Text} is not in the correct format");
+                    return;
+                }
                 String server = txtServerIp.Text;
-                Int32 port = 9000;
-                tcpClient = new TcpClient(server, port);
-                // EDIT
-                networkStream = tcpClient.GetStream();
+                Int32 port = Int32.Parse(portBox.Text);
+                tcpClient = new TcpClient();
+                await tcpClient.ConnectAsync(server, port);
                 ReceiveData();
-                // when connected. disable the button
-                btnListen.Enabled = false;
             }
             catch (ArgumentNullException err)
             {
                 Console.WriteLine("ArgumentNullException: {0}", err);
             }
-            catch (SocketException err)
+           
+            catch (SocketException)
             {
-                Console.WriteLine("SocketException: {0}", err);
+                SendMessage($"Server on ip: {ipAdress} and port: {portAdress} is not available" );
+            }
+            catch (FormatException)
+            {
+                SendMessage($"Given port adress: {portAdress} is not in the correct format (0-9999)" );
             }
         }
 
-        private async void startServer()
+        private Boolean validateIP(string ipString)
         {
-            try
+            if (String.IsNullOrWhiteSpace(ipString))
             {
-                TcpListener tcpListner = new TcpListener(IPAddress.Any, 9000);
-                tcpListner.Start();
-                sendMessage("Listening for a client");
-                while (true)
-                {
-                    tcpClient = await tcpListner.AcceptTcpClientAsync();
-                    ReceiveData();
-                }
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine("server error: {0}", e);
+                return false;
             }
 
+            string[] splitValues = ipString.Split('.');
+            if (splitValues.Length != 4)
+            {
+                return false;
+            }
+            return true;
+        }
 
-        }
-        public void AddMessage(string message)
-        {
-            chatBox.Items.Add(message);
-        }
         public async void ReceiveData()
         {
-            int i;
-            string s;
-            byte[] data = new byte[1024];
-            sendMessage("Connected!");
-            String responseData = String.Empty;
-            data = new Byte[256];
+            SendMessage("Connected!");
             networkStream = tcpClient.GetStream();
+            byte[] data = Encoding.ASCII.GetBytes(bufferSize.Text);
             try
             {
                 while (true)
                 {
-                    Int32 bytes = await networkStream.ReadAsync(data, 0, data.Length);
-                    responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                    Console.WriteLine("Received: {0}", responseData);
+                    string responseData = await sharedFunctions.ReceiveData(networkStream, data);
                     if (responseData == "bye")
                     {
                         break;
                     }
-                    sendMessage(responseData);
+                    SendMessage(responseData);
                 }
-                data = System.Text.Encoding.ASCII.GetBytes("bye");
                 networkStream.Write(data, 0, data.Length);
-
                 networkStream.Close();
                 tcpClient.Close();
-                sendMessage("Connection closed!");
+                SendMessage("Connection closed!");
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Cannot find a server");
+            }
+            catch (System.IO.IOException)
+            {
+                SendMessage("Host closed connection!");
             }
             catch (Exception err)
             {
-
+                SendMessage("Oops something went wrong");
                 throw err;
             }
         }
-       
-        private void BtnListen(object sender, EventArgs e)
+        
+        private void chatBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            sendMessage("Starting server....");
-            startServer();
-            connectButton.Enabled = false;
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtServerIp_TextChanged(object sender, EventArgs e)
+        {
+            ipAdress = txtServerIp.Text;
+        }
+
+        private void portBox_TextChanged(object sender, EventArgs e)
+        {
+            portAdress = portBox.Text;
         }
     }
 }
+//public async void ReceiveData()
+//{
+//    int i;
+//    string s;
+//    byte[] data = new byte[1024];
+//    sendMessage("Connected!");
+//    String responseData = String.Empty;
+//    data = new Byte[256];
+//    networkStream = tcpClient.GetStream();
+//    try
+//    {
+//        while (true)
+//        {
+//            Int32 bytes = await networkStream.ReadAsync(data, 0, data.Length);
+//            responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+//            Console.WriteLine("Received: {0}", responseData);
+//            if (responseData == "bye")
+//            {
+//                break;
+//            }
+//            sendMessage(responseData);
+//        }
+//        data = System.Text.Encoding.ASCII.GetBytes("bye");
+//        networkStream.Write(data, 0, data.Length);
+
+//        networkStream.Close();
+//        tcpClient.Close();
+//        sendMessage("Connection closed!");
+//    }
+//    catch (Exception err)
+//    {
+
+//        throw err;
+//    }
+//}

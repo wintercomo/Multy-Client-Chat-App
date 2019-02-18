@@ -29,13 +29,16 @@
         private void InitializeComponent()
         {
             this.sendMsgBtn = new System.Windows.Forms.Button();
-            this.btnListen = new System.Windows.Forms.Button();
             this.txtServerIp = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.connectButton = new System.Windows.Forms.Button();
             this.msgBox = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.chatBox = new System.Windows.Forms.ListBox();
+            this.portBox = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.bufferSize = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,17 +50,7 @@
             this.sendMsgBtn.TabIndex = 0;
             this.sendMsgBtn.Text = "btnSend";
             this.sendMsgBtn.UseVisualStyleBackColor = true;
-            this.sendMsgBtn.Click += new System.EventHandler(this.btnSend);
-            // 
-            // btnListen
-            // 
-            this.btnListen.Location = new System.Drawing.Point(651, 54);
-            this.btnListen.Name = "btnListen";
-            this.btnListen.Size = new System.Drawing.Size(142, 62);
-            this.btnListen.TabIndex = 1;
-            this.btnListen.Text = "listen";
-            this.btnListen.UseVisualStyleBackColor = true;
-            this.btnListen.Click += new System.EventHandler(this.BtnListen);
+            this.sendMsgBtn.Click += new System.EventHandler(this.BtnSend);
             // 
             // txtServerIp
             // 
@@ -67,6 +60,7 @@
             this.txtServerIp.Size = new System.Drawing.Size(100, 22);
             this.txtServerIp.TabIndex = 3;
             this.txtServerIp.Text = "127.0.0.1";
+            this.txtServerIp.TextChanged += new System.EventHandler(this.txtServerIp_TextChanged);
             // 
             // label2
             // 
@@ -79,7 +73,7 @@
             // 
             // connectButton
             // 
-            this.connectButton.Location = new System.Drawing.Point(17, 84);
+            this.connectButton.Location = new System.Drawing.Point(17, 126);
             this.connectButton.Name = "connectButton";
             this.connectButton.Size = new System.Drawing.Size(120, 24);
             this.connectButton.TabIndex = 6;
@@ -99,12 +93,14 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.portBox);
             this.groupBox1.Controls.Add(this.connectButton);
             this.groupBox1.Controls.Add(this.txtServerIp);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Location = new System.Drawing.Point(613, 145);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(180, 114);
+            this.groupBox1.Size = new System.Drawing.Size(180, 171);
             this.groupBox1.TabIndex = 8;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Connect to the server";
@@ -119,6 +115,45 @@
             this.chatBox.Name = "chatBox";
             this.chatBox.Size = new System.Drawing.Size(595, 384);
             this.chatBox.TabIndex = 10;
+            this.chatBox.SelectedIndexChanged += new System.EventHandler(this.chatBox_SelectedIndexChanged);
+            // 
+            // portBox
+            // 
+            this.portBox.ImeMode = System.Windows.Forms.ImeMode.Hiragana;
+            this.portBox.Location = new System.Drawing.Point(17, 98);
+            this.portBox.Name = "portBox";
+            this.portBox.Size = new System.Drawing.Size(100, 22);
+            this.portBox.TabIndex = 7;
+            this.portBox.Text = "9000";
+            this.portBox.TextChanged += new System.EventHandler(this.portBox_TextChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(14, 78);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(38, 17);
+            this.label1.TabIndex = 8;
+            this.label1.Text = "Port:";
+            this.label1.Click += new System.EventHandler(this.label1_Click);
+            // 
+            // bufferSize
+            // 
+            this.bufferSize.ImeMode = System.Windows.Forms.ImeMode.Hiragana;
+            this.bufferSize.Location = new System.Drawing.Point(630, 62);
+            this.bufferSize.Name = "bufferSize";
+            this.bufferSize.Size = new System.Drawing.Size(100, 22);
+            this.bufferSize.TabIndex = 9;
+            this.bufferSize.Text = "9000";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(627, 42);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(75, 17);
+            this.label3.TabIndex = 9;
+            this.label3.Text = "Buffer size";
             // 
             // MultyChatApp
             // 
@@ -127,9 +162,10 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.bufferSize);
             this.Controls.Add(this.chatBox);
             this.Controls.Add(this.msgBox);
-            this.Controls.Add(this.btnListen);
             this.Controls.Add(this.sendMsgBtn);
             this.Controls.Add(this.groupBox1);
             this.Name = "MultyChatApp";
@@ -144,13 +180,16 @@
         #endregion
 
         private System.Windows.Forms.Button sendMsgBtn;
-        private System.Windows.Forms.Button btnListen;
         private System.Windows.Forms.TextBox txtServerIp;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button connectButton;
         private System.Windows.Forms.TextBox msgBox;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.ListBox chatBox;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox portBox;
+        private System.Windows.Forms.TextBox bufferSize;
+        private System.Windows.Forms.Label label3;
     }
 }
 
