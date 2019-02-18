@@ -56,6 +56,8 @@ namespace MultyClientChatApp
                 tcpClient = new TcpClient();
                 await tcpClient.ConnectAsync(server, port);
                 ReceiveData();
+                portBox.Enabled = false;
+                txtServerIp.Enabled = false;
             }
             catch (ArgumentNullException err)
             {

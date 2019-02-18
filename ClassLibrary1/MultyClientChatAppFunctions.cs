@@ -19,7 +19,6 @@ namespace ClassLibrary1
             {
                 Int32 bytes = await networkStream.ReadAsync(data, 0, data.Length);
                 responseData = Encoding.ASCII.GetString(data, 0, bytes);
-                Console.WriteLine("Received: {0}", responseData);
                 if (responseData == "bye")
                 {
                     break;

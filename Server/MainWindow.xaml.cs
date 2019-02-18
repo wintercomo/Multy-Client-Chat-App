@@ -28,6 +28,12 @@ namespace Server
         ChatApp sharedFunctions = new ChatApp();
         TcpListener tcpListner;
         private string serverName;
+        List<NetworkStream> clients = new List<NetworkStream>();
+
+        private List<NetworkStream> GetClients()
+        {
+            return clients;
+        }
         public MainWindow()
         {
             InitializeComponent();
@@ -37,17 +43,20 @@ namespace Server
         {
             byte[] data = new byte[1024];
             data = Encoding.ASCII.GetBytes(msgBox.Text);
-            networkStream = tcpClient.GetStream();
-            networkStream.Write(data, 0, data.Length);
-            SendMessage(msgBox.Text);
+            foreach (var stream in clients)
+            {
+                stream.Write(data, 0, data.Length);
+
+            }
+            UpdateUI(msgBox.Text);
         }
-        private void SendMessage(string message)
+        private void UpdateUI(string message)
         {
             chatBox.Items.Add(message);
         }
         public async void ReceiveData()
         {
-            SendMessage("Connected!");
+            UpdateUI("Connected!");
             networkStream = tcpClient.GetStream();
             byte[] data = Encoding.ASCII.GetBytes($"Verbonden met:{serverName}");
             networkStream.Write(data, 0, data.Length);
@@ -56,16 +65,23 @@ namespace Server
             {
                 while (true)
                 {
-                    string responseData = await sharedFunctions.ReceiveData(networkStream, data);
+                    string responseData = await sharedFunctions.ReceiveData(tcpClient.GetStream(), data);
                     if (responseData == "bye")
                     {
-                        break;
+                        return;
                     }
-                    SendMessage(responseData);
+                    foreach (var stream in clients)
+                    {
+                        data = Encoding.ASCII.GetBytes(responseData);
+                        stream.Write(data, 0, data.Length);
+
+                    }
+                    UpdateUI(responseData);
                 }
+                // TODO: Why is this code unreachable + is this a problem?
                 networkStream.Close();
                 tcpClient.Close();
-                SendMessage("Connection closed!");
+                UpdateUI("Connection closed!");
             }
             catch (Exception err)
             {
@@ -76,7 +92,7 @@ namespace Server
         {
             if (tcpListner != null)
             {
-                SendMessage("Server is already running");
+                UpdateUI("Server is already running");
                 return;
             }
             try
@@ -84,12 +100,15 @@ namespace Server
                 int port = Int32.Parse(portBox.Text);
                 tcpListner = new TcpListener(IPAddress.Any, port);
                 tcpListner.Start();
-                SendMessage("Listening for a client");
+                UpdateUI("Listening for a client");
                 while (true)
                 {
                     tcpClient = await tcpListner.AcceptTcpClientAsync();
+                    clients.Add(tcpClient.GetStream());
                     ReceiveData();
+                    UpdateUI($"All clients{clients.Count}");
                 }
+
             }
             catch (SocketException e)
             {
@@ -100,7 +119,7 @@ namespace Server
         }
         private void BtnStartStop_Click(object sender, RoutedEventArgs e)
         {
-            SendMessage("Starting server....");
+            UpdateUI("Starting server....");
             StartServer();
         }
 
