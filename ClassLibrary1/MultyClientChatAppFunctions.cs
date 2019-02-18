@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ClassLibrary1
 {
-    public class ChatApp
+    public class ChatAppFunctions
     {
         public async Task<string> ReceiveData(NetworkStream networkStream, byte[] data )
         {

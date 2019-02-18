@@ -12,10 +12,9 @@ namespace MultyClientChatApp
 {
     public partial class MultyChatApp : Form
     {
-        private TcpClient tcpClient;
+        TcpClient tcpClient;
         NetworkStream networkStream;
-        ChatApp sharedFunctions = new ChatApp();
-        TcpListener tcpListner;
+        ChatAppFunctions sharedFunctions = new ChatAppFunctions();
         string ipAdress;
         string portAdress;
 
@@ -30,25 +29,22 @@ namespace MultyClientChatApp
         private void BtnSend(object sender, EventArgs e)
         {
             byte[] data = new byte[1024];
-            data = System.Text.Encoding.ASCII.GetBytes(msgBox.Text);
+            data = Encoding.ASCII.GetBytes(msgBox.Text);
             networkStream = tcpClient.GetStream();
             networkStream.Write(data, 0, data.Length);
-            SendMessage(msgBox.Text);
-
         }
-        private void SendMessage(string message)
+        private void UpdateUI(string message)
         {
-            
             chatBox.Items.Add(message);
         }
         private async void BtnConnect(object sender, EventArgs e)
         {
             try
             {
-                SendMessage("Connecting...");
+                UpdateUI("Connecting...");
                 if (!validateIP(txtServerIp.Text))
                 {
-                    SendMessage($"Given IP adress: {txtServerIp.Text} is not in the correct format");
+                    UpdateUI($"Given IP adress: {txtServerIp.Text} is not in the correct format");
                     return;
                 }
                 String server = txtServerIp.Text;
@@ -58,6 +54,7 @@ namespace MultyClientChatApp
                 ReceiveData();
                 portBox.Enabled = false;
                 txtServerIp.Enabled = false;
+                connectButton.Enabled = false;
             }
             catch (ArgumentNullException err)
             {
@@ -66,11 +63,11 @@ namespace MultyClientChatApp
            
             catch (SocketException)
             {
-                SendMessage($"Server on ip: {ipAdress} and port: {portAdress} is not available" );
+                UpdateUI($"Server on ip: {ipAdress} and port: {portAdress} is not available" );
             }
             catch (FormatException)
             {
-                SendMessage($"Given port adress: {portAdress} is not in the correct format (0-9999)" );
+                UpdateUI($"Given port adress: {portAdress} is not in the correct format (0-9999)" );
             }
         }
 
@@ -91,7 +88,7 @@ namespace MultyClientChatApp
 
         public async void ReceiveData()
         {
-            SendMessage("Connected!");
+            UpdateUI("Connected!");
             networkStream = tcpClient.GetStream();
             byte[] data = Encoding.ASCII.GetBytes(bufferSize.Text);
             try
@@ -103,12 +100,11 @@ namespace MultyClientChatApp
                     {
                         break;
                     }
-                    SendMessage(responseData);
+                    UpdateUI(responseData);
                 }
-                networkStream.Write(data, 0, data.Length);
                 networkStream.Close();
                 tcpClient.Close();
-                SendMessage("Connection closed!");
+                UpdateUI("Connection closed!");
             }
             catch (SocketException)
             {
@@ -116,11 +112,11 @@ namespace MultyClientChatApp
             }
             catch (System.IO.IOException)
             {
-                SendMessage("Host closed connection!");
+                UpdateUI("Host closed connection!");
             }
             catch (Exception err)
             {
-                SendMessage("Oops something went wrong");
+                UpdateUI("Oops something went wrong");
                 throw err;
             }
         }

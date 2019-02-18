@@ -23,9 +23,7 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
-        private TcpClient tcpClient;
-        NetworkStream networkStream;
-        ChatApp sharedFunctions = new ChatApp();
+        ChatAppFunctions chatApp = new ChatAppFunctions();
         TcpListener tcpListner;
         private string serverName;
         List<NetworkStream> clients = new List<NetworkStream>();
@@ -41,12 +39,10 @@ namespace Server
 
         private void BtnSend_Click(object sender, RoutedEventArgs e)
         {
-            byte[] data = new byte[1024];
-            data = Encoding.ASCII.GetBytes(msgBox.Text);
+            byte[] data = Encoding.ASCII.GetBytes(msgBox.Text);
             foreach (var stream in clients)
             {
                 stream.Write(data, 0, data.Length);
-
             }
             UpdateUI(msgBox.Text);
         }
@@ -54,33 +50,33 @@ namespace Server
         {
             chatBox.Items.Add(message);
         }
-        public async void ReceiveData()
+        public async void ReceiveData(NetworkStream networkStream)
         {
             UpdateUI("Connected!");
-            networkStream = tcpClient.GetStream();
-            byte[] data = Encoding.ASCII.GetBytes($"Verbonden met:{serverName}");
-            networkStream.Write(data, 0, data.Length);
-            data = Encoding.ASCII.GetBytes(bufferSize.Text);
+            byte[] bytesToSend = Encoding.ASCII.GetBytes($"Verbonden met:{serverName}");
+            networkStream.Write(bytesToSend, 0, bytesToSend.Length);
             try
             {
                 while (true)
                 {
-                    string responseData = await sharedFunctions.ReceiveData(tcpClient.GetStream(), data);
+                    bytesToSend = Encoding.ASCII.GetBytes(bufferSize.Text);
+                    string responseData = await chatApp.ReceiveData(networkStream, bytesToSend);
                     if (responseData == "bye")
                     {
                         return;
                     }
+                    // Update all connected clients
                     foreach (var stream in clients)
                     {
-                        data = Encoding.ASCII.GetBytes(responseData);
-                        stream.Write(data, 0, data.Length);
+                        bytesToSend = Encoding.ASCII.GetBytes(responseData);
+                        stream.Write(bytesToSend, 0, bytesToSend.Length);
 
                     }
                     UpdateUI(responseData);
                 }
                 // TODO: Why is this code unreachable + is this a problem?
                 networkStream.Close();
-                tcpClient.Close();
+                //tcpClient.Close();
                 UpdateUI("Connection closed!");
             }
             catch (Exception err)
@@ -103,10 +99,10 @@ namespace Server
                 UpdateUI("Listening for a client");
                 while (true)
                 {
-                    tcpClient = await tcpListner.AcceptTcpClientAsync();
+                    TcpClient tcpClient = await tcpListner.AcceptTcpClientAsync();
                     clients.Add(tcpClient.GetStream());
-                    ReceiveData();
-                    UpdateUI($"All clients{clients.Count}");
+                    ReceiveData(tcpClient.GetStream());
+                    UpdateUI($"Total connected clients{clients.Count}");
                 }
 
             }
