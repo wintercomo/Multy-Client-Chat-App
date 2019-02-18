@@ -10,8 +10,6 @@ namespace MultyClientChatApp
 {
     public partial class MultyChatApp : Form
     {
-        private Thread thread;
-        List<string> _items = new List<string>();
         private TcpClient tcpClient;
         NetworkStream networkStream;
 
@@ -38,17 +36,8 @@ namespace MultyClientChatApp
         }
         private void sendMessage(string message)
         {
-            if (this.chatBox.InvokeRequired)
-            {
-                AddMessageDelegate addMessage = new AddMessageDelegate(AddMessage);
-                // this is the delegate
-                this.Invoke(addMessage, new object[] { message });
-            }
-            else
-            {
-                chatBox.Items.Add(message);
-            }
-
+            
+            chatBox.Items.Add(message);
         }
         private void BtnConnect(object sender, EventArgs e)
         {
@@ -60,8 +49,7 @@ namespace MultyClientChatApp
                 tcpClient = new TcpClient(server, port);
                 // EDIT
                 networkStream = tcpClient.GetStream();
-                thread = new Thread(new ThreadStart(ReceiveData));
-                thread.Start();
+                ReceiveData();
                 // when connected. disable the button
                 btnListen.Enabled = false;
             }
@@ -75,7 +63,7 @@ namespace MultyClientChatApp
             }
         }
 
-        private void startServer()
+        private async void startServer()
         {
             try
             {
@@ -84,9 +72,8 @@ namespace MultyClientChatApp
                 sendMessage("Listening for a client");
                 while (true)
                 {
-                    tcpClient = tcpListner.AcceptTcpClient();
-                    thread = new Thread(() => { ReceiveData(); });
-                    thread.Start();
+                    tcpClient = await tcpListner.AcceptTcpClientAsync();
+                    ReceiveData();
                 }
             }
             catch (SocketException e)
@@ -100,20 +87,20 @@ namespace MultyClientChatApp
         {
             chatBox.Items.Add(message);
         }
-        public void ReceiveData()
+        public async void ReceiveData()
         {
+            int i;
+            string s;
+            byte[] data = new byte[1024];
+            sendMessage("Connected!");
+            String responseData = String.Empty;
+            data = new Byte[256];
+            networkStream = tcpClient.GetStream();
             try
             {
-                int i;
-                string s;
-                byte[] data = new byte[1024];
-                sendMessage("Connected!");
                 while (true)
                 {
-                    String responseData = String.Empty;
-                    data = new Byte[256];
-                    networkStream = tcpClient.GetStream();
-                    Int32 bytes = networkStream.Read(data, 0, data.Length);
+                    Int32 bytes = await networkStream.ReadAsync(data, 0, data.Length);
                     responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
                     Console.WriteLine("Received: {0}", responseData);
                     if (responseData == "bye")
@@ -139,10 +126,7 @@ namespace MultyClientChatApp
         private void BtnListen(object sender, EventArgs e)
         {
             sendMessage("Starting server....");
-                    thread = new Thread(() => { ReceiveData(); });
-
-            thread = new Thread(new ThreadStart(startServer));
-            thread.Start();
+            startServer();
             connectButton.Enabled = false;
         }
     }
