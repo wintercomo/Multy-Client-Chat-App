@@ -28,6 +28,7 @@ namespace MultyClientChatApp
 
         private void BtnSend(object sender, EventArgs e)
         {
+            if (tcpClient == null) return;
             byte[] data = new byte[1024];
             data = Encoding.ASCII.GetBytes(msgBox.Text);
             networkStream = tcpClient.GetStream();
@@ -42,10 +43,13 @@ namespace MultyClientChatApp
             try
             {
                 UpdateUI("Connecting...");
+                if (String.IsNullOrEmpty(usernameBox.Text))
+                {
+                    throw new ArgumentException("Username cannot be null or empty");
+                }
                 if (!validateIP(txtServerIp.Text))
                 {
-                    UpdateUI($"Given IP adress: {txtServerIp.Text} is not in the correct format");
-                    return;
+                    throw new ArgumentException($"Given IP adress: {txtServerIp.Text} is not in the correct format");
                 }
                 String server = txtServerIp.Text;
                 Int32 port = Int32.Parse(portBox.Text);
@@ -56,11 +60,10 @@ namespace MultyClientChatApp
                 txtServerIp.Enabled = false;
                 connectButton.Enabled = false;
             }
-            catch (ArgumentNullException err)
+            catch (ArgumentException err)
             {
-                Console.WriteLine("ArgumentNullException: {0}", err);
+                UpdateUI(err.Message);
             }
-           
             catch (SocketException)
             {
                 UpdateUI($"Server on ip: {ipAdress} and port: {portAdress} is not available" );
@@ -90,12 +93,14 @@ namespace MultyClientChatApp
         {
             UpdateUI("Connected!");
             networkStream = tcpClient.GetStream();
-            byte[] data = Encoding.ASCII.GetBytes(bufferSize.Text);
+            byte[] data = Encoding.ASCII.GetBytes(usernameBox.Text);
+            networkStream.Write(data, 0, data.Length);
+            data = Encoding.ASCII.GetBytes(msgBox.Text);
             try
             {
                 while (true)
                 {
-                    string responseData = await sharedFunctions.ReceiveData(networkStream, data);
+                    string responseData = await sharedFunctions.GetResponseData(networkStream, data);
                     if (responseData == "bye")
                     {
                         break;

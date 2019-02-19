@@ -9,7 +9,7 @@ namespace ClassLibrary1
 {
     public class ChatAppFunctions
     {
-        public async Task<string> ReceiveData(NetworkStream networkStream, byte[] data )
+        public async Task<string> GetResponseData(NetworkStream networkStream, byte[] data )
         {
             string responseData = "";
             //TOdO remove this later on
