@@ -66,7 +66,7 @@ namespace Server
                 while (true)
                 {
                     bytesToSend = Encoding.ASCII.GetBytes(bufferSize.Text);
-                    string responseData = await chatApp.GetResponseData(currentStream, bytesToSend);
+                    string responseData = await chatApp.GetResponseData(currentStream);
                     if (responseData == "bye")
                     {
                         string goodbyeMessage = $"Client '{allClients[currentClient]}' has left";
@@ -96,6 +96,7 @@ namespace Server
                 UpdateUI("Server is already running");
                 return;
             }
+            ToggleAllowInput();
             try
             {
                 int port = Int32.Parse(portBox.Text);
@@ -141,6 +142,14 @@ namespace Server
         {
             UpdateUI("Starting server....");
             StartServer();
+        }
+
+        private void ToggleAllowInput()
+        {
+            bufferSize.IsEnabled = !bufferSize.IsEnabled;
+            serverNameBox.IsEnabled = !serverNameBox.IsEnabled;
+            portBox.IsEnabled = !portBox.IsEnabled;
+            btnStartStop.IsEnabled = !btnStartStop.IsEnabled;
         }
 
         private void ChatBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

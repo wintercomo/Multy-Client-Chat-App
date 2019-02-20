@@ -62,7 +62,7 @@ namespace WpfApp1
             {
                 while (true)
                 {
-                    string responseData = await sharedFunctions.GetResponseData(networkStream, data);
+                    string responseData = await sharedFunctions.GetResponseData(networkStream, Int32.Parse(txtBufferSize.Text));
                     if (responseData == "bye")
                     {
                         break;
@@ -72,6 +72,7 @@ namespace WpfApp1
                 networkStream.Close();
                 tcpClient.Close();
                 UpdateUI("Connection closed!");
+                ToggleAllowInput();
             }
             catch (SocketException)
             {
@@ -86,6 +87,14 @@ namespace WpfApp1
                 UpdateUI("Oops something went wrong");
                 throw err;
             }
+        }
+        private void ToggleAllowInput()
+        {
+            txtPort.IsEnabled = !txtPort.IsEnabled;
+            txtServerIp.IsEnabled = !txtServerIp.IsEnabled;
+            connectButton.IsEnabled = !connectButton.IsEnabled;
+            usernameBox.IsEnabled = !usernameBox.IsEnabled;
+            txtBufferSize.IsEnabled = !txtBufferSize.IsEnabled;
         }
         private async void BtnConnect(object sender, RoutedEventArgs e)
         {
@@ -103,10 +112,8 @@ namespace WpfApp1
                 await tcpClient.ConnectAsync(server, port);
                 ReceiveData();
                 //Disable buttons and input fields
-                txtPort.IsEnabled = false;
-                txtServerIp.IsEnabled = false;
-                connectButton.IsEnabled = false;
-                usernameBox.IsEnabled = false;
+                ToggleAllowInput();
+                
             }
             catch (ArgumentException err)
             {
