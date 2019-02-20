@@ -51,7 +51,10 @@ namespace MultyClientChatClient
                 while (true)
                 {
                     string responseData = await sharedFunctions.GetResonseFromReading(networkStream, Int32.Parse(txtBufferSize.Text));
-                    if (responseData == "bye") break;
+                    if (responseData == "bye")
+                    {
+                        break;
+                    }
                     UpdateUI(responseData);
                 }
                 networkStream.Close();
@@ -128,22 +131,28 @@ namespace MultyClientChatClient
                 byte[] data = Encoding.ASCII.GetBytes(msgBox.Text);
                 networkStream = tcpClient.GetStream();
                 networkStream.Write(data, 0, data.Length);
+                msgBox.Focus();
+                msgBox.Clear();
             }
             catch (NullReferenceException)
             {
                 UpdateUI($"Message {msgBox.Text} cannot be send.\r\n" +
                     $"[REASON]: Client is not connected to any server");
             }
-            catch (Exception err)
+            catch (InvalidOperationException err)
             {
-                throw err;
+                UpdateUI($"Message {msgBox.Text} cannot be send.\r\n" +
+                    $"[REASON]: Client is not connected to any server");
             }
         }
 
         private void MsgBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (msgBox.Text.Length == 0) return;
-            if (e.Key == Key.Return) HandleSendMessage();
+            if (e.Key == Key.Return)
+            {
+                HandleSendMessage();
+            }
         }
     }
 }
