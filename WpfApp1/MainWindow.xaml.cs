@@ -15,20 +15,19 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WpfApp1
+namespace MultyClientChatClient
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class ClientWindow : Window
     {
         TcpClient tcpClient;
         NetworkStream networkStream;
         ChatAppFunctions sharedFunctions = new ChatAppFunctions();
         string ipAdress;
         string portAdress;
-        bool isConnected;
-        public MainWindow()
+        public ClientWindow()
         {
             InitializeComponent();
             ipAdress = txtServerIp.Text;
