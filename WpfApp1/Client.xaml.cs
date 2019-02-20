@@ -27,7 +27,6 @@ namespace WpfApp1
         ChatAppFunctions sharedFunctions = new ChatAppFunctions();
         string ipAdress;
         string portAdress;
-        bool isConnected;
         public MainWindow()
         {
             InitializeComponent();
@@ -82,7 +81,6 @@ namespace WpfApp1
             catch (System.IO.IOException)
             {
                 UpdateUI("Host closed connection!");
-                ToggleAllowInput();
             }
             catch (Exception err)
             {
@@ -133,22 +131,11 @@ namespace WpfApp1
 
         private void btnSend_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                byte[] data = new byte[1024];
-                data = Encoding.ASCII.GetBytes(msgBox.Text);
-                networkStream = tcpClient.GetStream();
-                networkStream.Write(data, 0, data.Length);
-            }
-            catch (NullReferenceException)
-            {
-                UpdateUI($"Message {msgBox.Text} cannot be send.\r\n" +
-                    $"[REASON]: Client is not connected to any server");
-            }
-            catch (Exception err)
-            {
-                throw err;
-            }
+            if (tcpClient == null) return;
+            byte[] data = new byte[1024];
+            data = Encoding.ASCII.GetBytes(msgBox.Text);
+            networkStream = tcpClient.GetStream();
+            networkStream.Write(data, 0, data.Length);
         }
     }
 }

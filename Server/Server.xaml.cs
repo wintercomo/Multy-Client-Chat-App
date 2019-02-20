@@ -1,7 +1,6 @@
 ﻿using ClassLibrary1;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -43,6 +42,7 @@ namespace Server
             SendToAllClients($"[Server]: {msgBox.Text}");
             UpdateUI($"[Server]: {msgBox.Text}");
         }
+
         private void UpdateUI(string message)
         {
             chatBox.Items.Add(message);
@@ -51,13 +51,9 @@ namespace Server
         private async void SendToAllClients(string message)
         {
             byte[] bytesToSend = Encoding.ASCII.GetBytes(message);
-            foreach (var client in allClients.ToList())
+            foreach (var client in allClients)
             {
-                // check if client is connected else do nothing
-                if (client.Key.Connected)
-                {
-                    await client.Key.GetStream().WriteAsync(bytesToSend, 0, bytesToSend.Length);
-                }
+                await client.Key.GetStream().WriteAsync(bytesToSend, 0, bytesToSend.Length);
             }
         }
         public async void ReceiveData(TcpClient currentClient)
@@ -88,13 +84,10 @@ namespace Server
                     UpdateUI($"[{allClients[currentClient]}]: {responseData}");
                 }
             }
-            catch (IOException err)
+            catch (Exception err)
             {
                 // when user leaves. Remove from the list
-                SendToAllClients($"[{allClients[currentClient]}]: Has left the chatroom");
-                UpdateUI($"[{allClients[currentClient]}]: Has left the chatroom");
-                allClients.Remove(currentClient);
-                UpdateClientList();
+                throw err;
             }
         }
         private async void StartServer()
