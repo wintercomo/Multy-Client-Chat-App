@@ -60,8 +60,8 @@ namespace Server
         }
         public async void ReceiveData(TcpClient currentClient)
         {
-            UpdateUI("Connected!");
-            byte[] bytesToSend = Encoding.ASCII.GetBytes($"Verbonden met:{txtServerName.Text}");
+            UpdateUI("A new client connected.");
+            byte[] bytesToSend = Encoding.ASCII.GetBytes($"Connected to chatroom: {txtServerName.Text}");
             NetworkStream currentStream = currentClient.GetStream();
             currentStream.Write(bytesToSend, 0, bytesToSend.Length);
             try
@@ -75,8 +75,8 @@ namespace Server
                     {
                         string goodbyeMessage = $"Client '{allClients[currentClient]}' has left";
                         UpdateUI(goodbyeMessage);
-                        SendToAllClients(goodbyeMessage);
                         allClients.Remove(currentClient);
+                        SendToAllClients(goodbyeMessage);
                         UpdateClientList();
                         bytesToSend = Encoding.ASCII.GetBytes("bye");
                         currentStream.Write(bytesToSend, 0, bytesToSend.Length);

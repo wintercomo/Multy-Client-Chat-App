@@ -41,7 +41,6 @@ namespace MultyClientChatClient
         // Handle a recieved message
         public async void ReceiveData()
         {
-            UpdateUI("Connected!");
             networkStream = tcpClient.GetStream();
             byte[] data = Encoding.ASCII.GetBytes(usernameBox.Text);
             networkStream.Write(data, 0, data.Length);
@@ -59,7 +58,7 @@ namespace MultyClientChatClient
                 }
                 networkStream.Close();
                 tcpClient.Close();
-                UpdateUI("Connection closed!");
+                UpdateUI("You have left the chat.");
                 ToggleAllowInput();
             }
             catch (SocketException)
