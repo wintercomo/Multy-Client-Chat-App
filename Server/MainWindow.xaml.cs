@@ -46,6 +46,7 @@ namespace Server
         {
             chatBox.Items.Add(message);
         }
+
         private async void SendToAllClients(string message)
         {
             byte[] bytesToSend = Encoding.ASCII.GetBytes(message);

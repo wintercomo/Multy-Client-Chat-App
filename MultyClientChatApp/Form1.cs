@@ -43,22 +43,21 @@ namespace MultyClientChatApp
             try
             {
                 UpdateUI("Connecting...");
-                if (String.IsNullOrEmpty(usernameBox.Text))
-                {
-                    throw new ArgumentException("Username cannot be null or empty");
-                }
-                if (!validateIP(txtServerIp.Text))
-                {
-                    throw new ArgumentException($"Given IP adress: {txtServerIp.Text} is not in the correct format");
-                }
                 String server = txtServerIp.Text;
+                
+                // error handling
+                if (String.IsNullOrEmpty(usernameBox.Text)) throw new ArgumentException("Username cannot be null or empty");
+                if (!validateIP(server)) throw new ArgumentException($"Given IP adress: {server} is not in the correct format");
+                //PASS => create a client
                 Int32 port = Int32.Parse(portBox.Text);
                 tcpClient = new TcpClient();
                 await tcpClient.ConnectAsync(server, port);
                 ReceiveData();
+                //Disable buttons and input fields
                 portBox.Enabled = false;
                 txtServerIp.Enabled = false;
                 connectButton.Enabled = false;
+                usernameBox.Enabled = false;
             }
             catch (ArgumentException err)
             {
