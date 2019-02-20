@@ -36,7 +36,7 @@
                 <Label Grid.Row="2">Buffer Size</Label>
 
 
-                <TextBox Grid.Column="1" Name="serverNameBox" Text="NOTS Chat Server" Margin="5" TextChanged="TextBox_TextChanged"/>
+                <TextBox Grid.Column="1" Name="txtServerName" Text="NOTS Chat Server" Margin="5" />
                 <TextBox Grid.Row="1" Name="portBox" Grid.Column="1" Text="9000" Margin="5"/>
                 <TextBox Grid.Row="2" Name="bufferSize" Grid.Column="1" Text="1024" Margin="5"/>
 
@@ -53,13 +53,13 @@
         <GroupBox Grid.Row="2" Header="Send Message" Padding="10" Margin="10">
             <StackPanel Orientation="Vertical">
                 <Label Margin="5">Message</Label>
-                <TextBox x:Name="msgBox" Margin="5" />
+                <TextBox x:Name="msgBox" KeyDown="MsgBox_KeyDown" Margin="5" />
                 <Button x:Name="btnSend" Padding="5" Margin="10" Click="BtnSend_Click">Send</Button>
             </StackPanel>
         </GroupBox>
 
         <GroupBox Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" Header="Chats" Padding="10" Margin="10">
-            <ListBox x:Name="chatBox" SelectionChanged="ChatBox_SelectionChanged">
+            <ListBox x:Name="chatBox">
                 <ListBoxItem>No chat messages yet...</ListBoxItem>
             </ListBox>
         </GroupBox>

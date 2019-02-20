@@ -26,7 +26,6 @@ namespace Server
     {
         ChatAppFunctions chatApp = new ChatAppFunctions();
         TcpListener tcpListner;
-        private string serverName;
         Dictionary<TcpClient, string> allClients = new Dictionary<TcpClient, string>();
 
         private Dictionary<TcpClient, string> GetClients()
@@ -40,8 +39,7 @@ namespace Server
 
         private void BtnSend_Click(object sender, RoutedEventArgs e)
         {
-            SendToAllClients($"[Server]: {msgBox.Text}");
-            UpdateUI($"[Server]: {msgBox.Text}");
+            HandleOnSendMessage();
         }
         private void UpdateUI(string message)
         {
@@ -63,22 +61,23 @@ namespace Server
         public async void ReceiveData(TcpClient currentClient)
         {
             UpdateUI("Connected!");
-            byte[] bytesToSend = Encoding.ASCII.GetBytes($"Verbonden met:{serverName}");
+            byte[] bytesToSend = Encoding.ASCII.GetBytes($"Verbonden met:{txtServerName.Text}");
             NetworkStream currentStream = currentClient.GetStream();
             currentStream.Write(bytesToSend, 0, bytesToSend.Length);
             try
             {
+                // While there is a connection
                 while (true)
                 {
-                    bytesToSend = Encoding.ASCII.GetBytes(bufferSize.Text);
-                    string responseData = await chatApp.GetResponseData(currentStream, Int32.Parse(bufferSize.Text));
+                    string responseData = await chatApp.GetResonseFromReading(currentStream, Int32.Parse(bufferSize.Text));
+                    // Handle client leaving
                     if (responseData == "bye")
                     {
                         string goodbyeMessage = $"Client '{allClients[currentClient]}' has left";
                         UpdateUI(goodbyeMessage);
+                        SendToAllClients(goodbyeMessage);
                         allClients.Remove(currentClient);
                         UpdateClientList();
-                        SendToAllClients(goodbyeMessage);
                         bytesToSend = Encoding.ASCII.GetBytes("bye");
                         currentStream.Write(bytesToSend, 0, bytesToSend.Length);
                         return;
@@ -99,16 +98,10 @@ namespace Server
         }
         private async void StartServer()
         {
-            if (tcpListner != null)
-            {
-                UpdateUI("Server is already running");
-                return;
-            }
             ToggleAllowInput();
             try
             {
-                int port = Int32.Parse(portBox.Text);
-                tcpListner = new TcpListener(IPAddress.Any, port);
+                tcpListner = new TcpListener(IPAddress.Any, Int32.Parse(portBox.Text));
                 tcpListner.Start();
                 UpdateUI("Listening for a client");
                 while (true)
@@ -128,10 +121,25 @@ namespace Server
                 }
 
             }
+            catch (FormatException)
+            {
+                UpdateUI($"Given port adress: {portBox.Text} is not in the correct format (0-9999)");
+            }
             catch (SocketException e)
             {
-                
                 Console.WriteLine("server error: {0}", e);
+                throw e;
+            }
+            catch (ObjectDisposedException)
+            {
+                tcpListner.Stop();
+                UpdateUI("Server stopped");
+            }
+            finally
+            {
+                tcpListner.Stop();
+                tcpListner.Stop();
+                UpdateUI("Server stopped");
             }
 
 
@@ -140,6 +148,11 @@ namespace Server
         private void UpdateClientList()
         {
             listClients.Items.Clear();
+            if (allClients.Count == 0) 
+            {
+                listClients.Items.Add("No clients connected yet");
+                return;
+            }
             foreach (var client in allClients)
             {
                 listClients.Items.Add(client.Value);
@@ -155,19 +168,23 @@ namespace Server
         private void ToggleAllowInput()
         {
             bufferSize.IsEnabled = !bufferSize.IsEnabled;
-            serverNameBox.IsEnabled = !serverNameBox.IsEnabled;
+            txtServerName.IsEnabled = !txtServerName.IsEnabled;
             portBox.IsEnabled = !portBox.IsEnabled;
             btnStartStop.IsEnabled = !btnStartStop.IsEnabled;
         }
 
-        private void ChatBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void MsgBox_KeyDown(object sender, KeyEventArgs e)
         {
-
+            if (e.Key == Key.Return) HandleOnSendMessage();
         }
 
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void HandleOnSendMessage()
         {
-            serverName = serverNameBox.Text;
+            if (msgBox.Text.Length == 0) return;
+            SendToAllClients($"[Server]: {msgBox.Text}");
+            UpdateUI($"[Server]: {msgBox.Text}");
+            msgBox.Clear();
+            msgBox.Focus();
         }
     }
 }

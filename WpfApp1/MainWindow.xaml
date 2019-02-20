@@ -39,7 +39,7 @@
             <GroupBox Header="Send Message" Padding="10" Margin="10">
                 <StackPanel Orientation="Vertical">
                     <Label Margin="5" Content="Message"/>
-                    <TextBox x:Name="msgBox" Margin="5" />
+                    <TextBox x:Name="msgBox" KeyDown='MsgBox_KeyDown' Margin="5" />
                     <Button x:Name="btnSend" Padding="5" Margin="10" Click="btnSend_Click" Content="Send"/>
                 </StackPanel>
             </GroupBox>

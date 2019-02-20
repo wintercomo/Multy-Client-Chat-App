@@ -1,43 +1,30 @@
 ﻿using ClassLibrary1;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MultyClientChatClient
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// WPF of a client that can connect to a tcp listener
     /// </summary>
     public partial class ClientWindow : Window
     {
         TcpClient tcpClient;
         NetworkStream networkStream;
         ChatAppFunctions sharedFunctions = new ChatAppFunctions();
-        string ipAdress;
-        string portAdress;
         public ClientWindow()
         {
             InitializeComponent();
-            ipAdress = txtServerIp.Text;
-            portAdress = txtPort.Text;
         }
         private void UpdateUI(string message)
         {
             chatBox.Items.Add(message);
         }
-        private Boolean validateIP(string ipString)
+        //Checks if an given IP adress is a correct IP adress
+        private Boolean ValidateIpAdress(string ipString)
         {
             if (String.IsNullOrWhiteSpace(ipString))
             {
@@ -51,6 +38,7 @@ namespace MultyClientChatClient
             }
             return true;
         }
+        // Handle a recieved message
         public async void ReceiveData()
         {
             UpdateUI("Connected!");
@@ -62,11 +50,8 @@ namespace MultyClientChatClient
             {
                 while (true)
                 {
-                    string responseData = await sharedFunctions.GetResponseData(networkStream, Int32.Parse(txtBufferSize.Text));
-                    if (responseData == "bye")
-                    {
-                        break;
-                    }
+                    string responseData = await sharedFunctions.GetResonseFromReading(networkStream, Int32.Parse(txtBufferSize.Text));
+                    if (responseData == "bye") break;
                     UpdateUI(responseData);
                 }
                 networkStream.Close();
@@ -88,6 +73,11 @@ namespace MultyClientChatClient
                 UpdateUI("Oops something went wrong");
                 throw err;
             }
+            finally
+            {
+                networkStream.Close();
+                tcpClient.Close();
+            }
         }
         private void ToggleAllowInput()
         {
@@ -102,19 +92,15 @@ namespace MultyClientChatClient
             try
             {
                 UpdateUI("Connecting...");
-                String server = txtServerIp.Text;
-
                 // error handling
                 if (String.IsNullOrEmpty(usernameBox.Text)) throw new ArgumentException("Username cannot be null or empty");
-                if (!validateIP(server)) throw new ArgumentException($"Given IP adress: {server} is not in the correct format");
+                if (!ValidateIpAdress(txtServerIp.Text)) throw new ArgumentException($"Given IP adress: {txtServerIp.Text} is not in the correct format");
                 //PASS => create a client
                 Int32 port = Int32.Parse(txtPort.Text);
                 tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(server, port);
+                await tcpClient.ConnectAsync(txtServerIp.Text, port);
                 ReceiveData();
-                //Disable buttons and input fields
                 ToggleAllowInput();
-                
             }
             catch (ArgumentException err)
             {
@@ -122,20 +108,24 @@ namespace MultyClientChatClient
             }
             catch (SocketException)
             {
-                UpdateUI($"Server on ip: {ipAdress} and port: {portAdress} is not available");
+                UpdateUI($"Server on ip: {txtServerIp.Text} and port: {txtPort.Text} is not available");
             }
             catch (FormatException)
             {
-                UpdateUI($"Given port adress: {portAdress} is not in the correct format (0-9999)");
+                UpdateUI($"Given port adress: {txtPort.Text} is not in the correct format (0-9999)");
             }
         }
 
         private void btnSend_Click(object sender, RoutedEventArgs e)
         {
+            HandleSendMessage();
+        }
+
+        private void HandleSendMessage()
+        {
             try
             {
-                byte[] data = new byte[1024];
-                data = Encoding.ASCII.GetBytes(msgBox.Text);
+                byte[] data = Encoding.ASCII.GetBytes(msgBox.Text);
                 networkStream = tcpClient.GetStream();
                 networkStream.Write(data, 0, data.Length);
             }
@@ -148,6 +138,12 @@ namespace MultyClientChatClient
             {
                 throw err;
             }
+        }
+
+        private void MsgBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (msgBox.Text.Length == 0) return;
+            if (e.Key == Key.Return) HandleSendMessage();
         }
     }
 }
