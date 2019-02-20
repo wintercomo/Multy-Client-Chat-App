@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Server"
         mc:Ignorable="d"
-        Title="NOTS Chat Server" Height="650" Width="800" MinWidth="500">
+        Title="NOTS Chat Server" Height="650" Width="800" MinHeight="500" MinWidth="500">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

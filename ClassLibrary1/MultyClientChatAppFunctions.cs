@@ -11,30 +11,14 @@ namespace ClassLibrary1
     {
         public async Task<string> GetResponseData(NetworkStream networkStream, Int32 bufferSize = 1024)
         {
-            //TOdO remove this later on
-            //Int32 bufferSize = 2;
             StringBuilder responseData = new StringBuilder();
-
-            while (true)
+            Console.WriteLine($"RECIEVE MESSAGE: Buffer size : {bufferSize}");
+            byte[] buffer = new byte[bufferSize];
+            do
             {
-                byte[] buffer = new byte[bufferSize];
-                do
-                {
-                    if (buffer.Length != bufferSize)
-                    {
-                        buffer = new byte[bufferSize];
-                    }
-                    int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
-                    responseData.AppendFormat("{0}", Encoding.ASCII.GetString(buffer, 0, readBytes));
-                } while (networkStream.DataAvailable);
-                //Int32 bytes = await networkStream.ReadAsync(bufferSize, 0, bufferSize.Length);
-                //responseData = Encoding.ASCII.GetString(bufferSize, 0, bytes);
-                if (responseData.ToString() == "bye")
-                {
-                    break;
-                }
-                return responseData.ToString();
-            }
+                int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
+                responseData.AppendFormat("{0}", Encoding.ASCII.GetString(buffer, 0, readBytes));
+            } while (networkStream.DataAvailable);
             return responseData.ToString();
         }
     }

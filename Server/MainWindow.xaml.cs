@@ -88,7 +88,7 @@ namespace Server
                     UpdateUI($"[{allClients[currentClient]}]: {responseData}");
                 }
             }
-            catch (IOException err)
+            catch (IOException)
             {
                 // when user leaves. Remove from the list
                 SendToAllClients($"[{allClients[currentClient]}]: Has left the chatroom");
