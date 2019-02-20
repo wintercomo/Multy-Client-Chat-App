@@ -66,7 +66,7 @@ namespace Server
                 while (true)
                 {
                     bytesToSend = Encoding.ASCII.GetBytes(bufferSize.Text);
-                    string responseData = await chatApp.GetResponseData(currentStream);
+                    string responseData = await chatApp.GetResponseData(currentStream, Int32.Parse(bufferSize.Text));
                     if (responseData == "bye")
                     {
                         string goodbyeMessage = $"Client '{allClients[currentClient]}' has left";
