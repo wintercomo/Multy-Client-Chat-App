@@ -41,8 +41,8 @@ ArrayList myAL = new ArrayList();
 In dit voorbeeld is te zien dat een string telkens weergegeven wordt door een object op te roepen.
 ### Authentieke en gezaghebbende bronnen  
 
- 1. https://docs.microsoft.com/en-us/dotnet/api/system.collections.arraylist?view=netframework-4.7.
- 2. https://www.geeksforgeeks.org/c-sharp-generics-introduction/
+ - https://docs.microsoft.com/en-us/dotnet/api/system.collections.arraylist?view=netframework-4.7.
+ - https://www.geeksforgeeks.org/c-sharp-generics-introduction/
   
 ## Boxing & Unboxing
 ### Beschrijving van concept in eigen woorden    
@@ -67,18 +67,58 @@ StringBuilder responseData = new StringBuilder();
             return responseData.ToString();
 ```
 ### Alternatieven & adviezen  
-Een alternatief is dus generics. Zoals eerder uitgelegt worden datatypes niet meer omgezet naar objecten en visa versa omdat je dit aangeeft via het gebruik van een generic. 
+Een alternatief is dus generics. Zoals eerder benoemd worden datatypes niet meer omgezet naar objecten en visa versa als je gebruik maakt van generics. Dit zal ook veel verschil maken in performance doordat er geen 2 verschillende objecten onthouden worden.  
 ### Authentieke en gezaghebbende bronnen  
   
-##Delegates & Invoke  
-###Beschrijving van concept in eigen woorden  
+ - https://www.google.com/search?client=firefox-b-d&ei=4tVuXNq2H8jPwQLYoK34Cg&q=boxing+and+unboxing+in+c%23&oq=boxing+and+unb&gs_l=psy-ab.3.0.0i203l10.4427.6791..8429...0.0..0.215.1354.6j5j1....2..0....1..gws-wiz.......0i71j0j35i39j0i67j0i131i67j0i131.6R6Mctitoso
+
+## Delegates & Invoke  
+### Beschrijving van concept in eigen woorden  
+Een **delegate** is een pointer functie dat verwijst naar de locatie van iets anders. Dit kan goed gebruikt worden om tijdens **multythreading** om weer terug te springen naar de main (UI) thread.  Dit heet **thread marshalling**. Door een delegate te gebruiken kan je een functie aanwijzen in de dat je in main thread wilt aanroepen. Wanneer de delegate wordt aangeroepen wordt er uit de thread gesprongen. Door **Invoke** te gebruiken kan de aangewezen methode oproepen van de gewenste thread. Het mooie aan delegates is dat ze "Type save" zijn. Dit is ook goed voor performance doordat je niet vanalles aan kan koppelen maar alleen dat wat aangegeven is.
 ### Code voorbeeld van je eigen code  
+
+> Dit voorbeeld laat niet zien hoe invoke gebruikt wordt doordat dit niet gebruikt is in mijn project.
+
+Met deze regel code defineer ik de delegate. Hier geef ik aan dat de delegate een void methode kan aanwijzen die een string verwacht als parameter. 
+`delegate void AddMessageDelegate(string n);`
+Met deze aanroep defineer ik een variable die de delegate die verwijst naar de AddMessage methode. Door de variable newMessage aan te roepen met een string als parameter zal de AddMessage methode opgeroepen worden in de main thread.
+```
+public void ReceiveData()
+{
+try
+{
+int i;
+string s;
+byte[] data = new byte[1024];
 AddMessageDelegate newMessage = new AddMessageDelegate(AddMessage);
-###Alternatieven & adviezen  
-###Authentieke en gezaghebbende bronnen  
+newMessage("Connected!");
+// Code continues ...
+```
+Dit stuk code laat zien hoe je de **delegate** kan oproepen via de **invoke** methode. Dit is niet handig doordat je een object moet meegeven dat voor de functie niet nodig is. 
+
+> De _items variable is de lijst met berichten. Deze lijst bestaat niet meer in de nieuwere versie.
+```
+if (this.chatBox.InvokeRequired)
+{
+AddMessageDelegate addMessage = new AddMessageDelegate(AddMessage);
+// this is the delegate
+this.Invoke(addMessage, _items, message);
+}
+else
+{
+// code continues ...
+```
+### Alternatieven & adviezen  
+Wat gebruikt kan worden als alternatief voor **delegates** zijn **lamda expressies**. Hiermee kan je gelijk een functie aangeven dat uitgevoerd kan worden. Vanplaats wijzen naar een methode kan je gelijk een methode defineren. Hierdoor hoef je ook geen gebruik meer te maken van de invoke methode. 
+### Authentieke en gezaghebbende bronnen  
+https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/lambda-expressions
+https://www.google.com/search?client=firefox-b-d&q=alternative+to+delegate+c%23
   
-##Threading & Async  
-###Beschrijving van concept in eigen woorden  
-###Code voorbeeld van je eigen code  
-###Alternatieven & adviezen  
-###Authentieke en gezaghebbende bronnen
+## Threading & Async  
+### Beschrijving van concept in eigen woorden 
+Het concept van **threads** is waar de code op loopt. Alle code wordt **parralel** uitgevoerd op 1 thread en dat is de main (UI) thread. Op deze thread wordt alles synchroon uitgevoerd. Hierdoor loopt alles achter elkaar en kan het programma vastlopen omdat het wacht tot een taak klaar is. Zware taken zou je liever **asynchroon** willen oplossen zodat de main thread nooit hoeft te wachten en dat het gewenste resultaat opgehaalt kan worden wanneer het zo ver is. Dit kan je doen op verschillende manieren.
+### Code voorbeeld van je eigen code  
+
+### Alternatieven & adviezen  
+Een alternatief voor theads zijn **Tasks**
+### Authentieke en gezaghebbende bronnen
