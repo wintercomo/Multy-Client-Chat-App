@@ -1,4 +1,5 @@
-
+# Multy-Client-Chat-App
+An app where multy clients can comunicate back and forth
 # Algemene beschrijving applicatie  
   
 ### Studentnummer:  60399
