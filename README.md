@@ -1,3 +1,4 @@
+
 # Multy-Client-Chat-App
 An app where multy clients can comunicate back and forth
 # Algemene beschrijving applicatie  
@@ -27,18 +28,21 @@ Dit stukje code laat zien hoe een generic lijst wordt aangemakt en gebruikt. Dit
 
 De generic is te zien door wat tussen **< >** staat. Hier Gebruik ik de **Networkstream** object om te defineren welke datatypes in de lijst te verwachten is. In de functie zelf moet ook weer de **generic** gedefineerd worden om ook de functie effecienter te laten maken. Dit betekend dat er nu niet meer **gecast** moet worden naar een **Networkstream** object wanneer de lijst wordt opgevraagt en de items gebruikt worden.
 ### Alternatieven & adviezen  
-Je kan ook een ArrayList gebruiken. Hier wordt het mogelijk om niet een datatype aan te geven en zo verwacht de arraylist alleenmaar objecten. Omdat alles een object is c# is dit mogelijk. Je krijgt dan telkens ook een object terug 
+Je kan ook een **ArrayList** gebruiken. Hier wordt het mogelijk om niet een datatype aan te geven en zo verwacht de arraylist alleen maar objecten. Omdat alles een object is c# is dit mogelijk. Je krijgt dan telkens ook een object terug 
 ```
 ArrayList myAL = new ArrayList();
       myAL.Add("Hello");
       myAL.Add("World");
       myAL.Add("!");
 ```
-`foreach ( Object obj in myList )`
-`{` 
-`Console.Write( "   {0}", obj );`
-`Console.WriteLine();`
-`}`
+```
+foreach ( Object obj in myList )
+{
+	Console.Write( "   {0}", obj );
+	Console.WriteLine();`
+}
+```
+
 In dit voorbeeld is te zien dat een string telkens weergegeven wordt door een object op te roepen.
 ### Authentieke en gezaghebbende bronnen  
 
@@ -121,5 +125,5 @@ Het concept van **threads** is waar de code op loopt. Alle code wordt **parralel
 ### Code voorbeeld van je eigen code  
 
 ### Alternatieven & adviezen  
-Een alternatief voor theads zijn **Tasks**
+Een alternatief voor theads zijn **Tasks**.
 ### Authentieke en gezaghebbende bronnen
