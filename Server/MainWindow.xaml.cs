@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows;
@@ -82,6 +83,43 @@ namespace Server
                 UpdateClientList();
             }
         }
+        public static bool PortInUse(int port)
+
+        {
+
+            bool inUse = false;
+
+
+
+            IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+
+            IPEndPoint[] ipEndPoints = ipProperties.GetActiveTcpListeners();
+
+
+
+
+            foreach (IPEndPoint endPoint in ipEndPoints)
+
+            {
+
+                if (endPoint.Port == port)
+
+                {
+
+                    inUse = true;
+
+                    break;
+
+                }
+
+            }
+
+
+
+
+            return inUse;
+
+        }
         private async void StartServer()
         {
             
@@ -90,6 +128,7 @@ namespace Server
                 if (String.IsNullOrEmpty(serverNameBox.Text)) throw new ArgumentException("Server name cannot empty");
                 if (!bufferSize.Text.All(char.IsDigit)) throw new ArgumentException("Buffer size must be a number");
                 if (bufferSize.Text.Length > 0 && Int32.Parse(bufferSize.Text) == 0 || String.IsNullOrEmpty(bufferSize.Text)) throw new ArgumentException("Buffer size cannot be 0");
+                if (PortInUse(Int32.Parse(portBox.Text))) throw new ArgumentException($"[ERROR] Port: {portBox.Text} is in use");
                 UpdateUI("Starting server....");
                 TcpClient tcpClient;
                 tcpListner = new TcpListener(IPAddress.Any, Int32.Parse(portBox.Text));
