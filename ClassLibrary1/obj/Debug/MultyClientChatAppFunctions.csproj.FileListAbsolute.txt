@@ -10,3 +10,9 @@ C:\Users\chris\Desktop\test\Multy-Client-Chat-App\ClassLibrary1\obj\Debug\MultyC
 C:\Users\chris\Desktop\test\Multy-Client-Chat-App\ClassLibrary1\obj\Debug\MultyClientChatAppFunctions.csproj.CoreCompileInputs.cache
 C:\Users\chris\Desktop\test\Multy-Client-Chat-App\ClassLibrary1\obj\Debug\ClassLibrary1.dll
 C:\Users\chris\Desktop\test\Multy-Client-Chat-App\ClassLibrary1\obj\Debug\ClassLibrary1.pdb
+C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\Multy-Client-Chat-App\ClassLibrary1\bin\Debug\ClassLibrary1.dll
+C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\Multy-Client-Chat-App\ClassLibrary1\bin\Debug\ClassLibrary1.pdb
+C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\Multy-Client-Chat-App\ClassLibrary1\obj\Debug\MultyClientChatAppFunctions.csprojAssemblyReference.cache
+C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\Multy-Client-Chat-App\ClassLibrary1\obj\Debug\MultyClientChatAppFunctions.csproj.CoreCompileInputs.cache
+C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\Multy-Client-Chat-App\ClassLibrary1\obj\Debug\ClassLibrary1.dll
+C:\Users\chris\Documents\NOTS\Homework\Multy-Client-Chat-App\Multy-Client-Chat-App\ClassLibrary1\obj\Debug\ClassLibrary1.pdb
