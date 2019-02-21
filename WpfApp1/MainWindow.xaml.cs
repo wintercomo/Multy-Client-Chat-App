@@ -1,14 +1,16 @@
 ﻿using ClassLibrary1;
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
 namespace MultyClientChatClient
 {
     /// <summary>
-    /// WPF of a client that can connect to a tcp listener
+    /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class ClientWindow : Window
     {
@@ -23,24 +25,18 @@ namespace MultyClientChatClient
         {
             chatBox.Items.Add(message);
         }
-        //Checks if an given IP adress is a correct IP adress
         private Boolean ValidateIpAdress(string ipString)
         {
-            if (String.IsNullOrWhiteSpace(ipString))
-            {
-                return false;
-            }
-
+            if (String.IsNullOrWhiteSpace(ipString)) return false;
+            if (!Regex.IsMatch(ipString, @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b")) return false;
             string[] splitValues = ipString.Split('.');
-            if (splitValues.Length != 4)
-            {
-                return false;
-            }
+            if (splitValues.Length != 4) return false;
             return true;
         }
-        // Handle a recieved message
+        // Handle recieving data
         public async void ReceiveData()
         {
+            UpdateUI("Connected!");
             networkStream = tcpClient.GetStream();
             byte[] data = Encoding.ASCII.GetBytes(usernameBox.Text);
             networkStream.Write(data, 0, data.Length);
@@ -49,7 +45,7 @@ namespace MultyClientChatClient
             {
                 while (true)
                 {
-                    string responseData = await sharedFunctions.GetResonseFromReading(networkStream, Int32.Parse(txtBufferSize.Text));
+                    string responseData = await sharedFunctions.CreateMessageFromReading(networkStream, Int32.Parse(txtBufferSize.Text));
                     if (responseData == "bye")
                     {
                         break;
@@ -58,7 +54,7 @@ namespace MultyClientChatClient
                 }
                 networkStream.Close();
                 tcpClient.Close();
-                UpdateUI("You have left the chat.");
+                UpdateUI("Connection closed!");
                 ToggleAllowInput();
             }
             catch (SocketException)
@@ -75,12 +71,8 @@ namespace MultyClientChatClient
                 UpdateUI("Oops something went wrong");
                 throw err;
             }
-            finally
-            {
-                networkStream.Close();
-                tcpClient.Close();
-            }
         }
+        //Disable all connection inputs
         private void ToggleAllowInput()
         {
             txtPort.IsEnabled = !txtPort.IsEnabled;
@@ -93,16 +85,22 @@ namespace MultyClientChatClient
         {
             try
             {
-                UpdateUI("Connecting...");
                 // error handling
+                String server = txtServerIp.Text;
                 if (String.IsNullOrEmpty(usernameBox.Text)) throw new ArgumentException("Username cannot be null or empty");
-                if (!ValidateIpAdress(txtServerIp.Text)) throw new ArgumentException($"Given IP adress: {txtServerIp.Text} is not in the correct format");
+                //if (String.IsNullOrEmpty(txtBufferSize.Text)) UpdateUI("No buffer size specified. Using default (1024)");
+                if (!txtBufferSize.Text.All(char.IsDigit)) throw new ArgumentException("Buffer size must be a number");
+                if (txtBufferSize.Text.Length > 0 && Int32.Parse(txtBufferSize.Text) == 0 || String.IsNullOrEmpty(txtBufferSize.Text)) throw new ArgumentException("Buffer size cannot be 0");
+                if (!ValidateIpAdress(server)) throw new ArgumentException($"Given IP adress: '{server}' is not in the correct format");
+                UpdateUI("Connecting...");
                 //PASS => create a client
                 Int32 port = Int32.Parse(txtPort.Text);
                 tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(txtServerIp.Text, port);
+                await tcpClient.ConnectAsync(server, port);
                 ReceiveData();
+                //Disable buttons and input fields
                 ToggleAllowInput();
+                
             }
             catch (ArgumentException err)
             {
@@ -110,48 +108,42 @@ namespace MultyClientChatClient
             }
             catch (SocketException)
             {
-                UpdateUI($"Server on ip: {txtServerIp.Text} and port: {txtPort.Text} is not available");
+                UpdateUI($"Server on ip: '{txtServerIp.Text}' and port: '{txtPort.Text}' is not available");
             }
-            catch (FormatException)
+            catch (FormatException err)
             {
-                UpdateUI($"Given port adress: {txtPort.Text} is not in the correct format (0-9999)");
+                Console.WriteLine("BIG ERR" +err);
+                UpdateUI($"Given port adress: '{txtPort.Text}' is not in the correct format (0-9999)");
             }
         }
-
-        private void btnSend_Click(object sender, RoutedEventArgs e)
-        {
-            HandleSendMessage();
-        }
-
-        private void HandleSendMessage()
+        private void HandleSendmessage()
         {
             try
             {
                 byte[] data = Encoding.ASCII.GetBytes(msgBox.Text);
                 networkStream = tcpClient.GetStream();
                 networkStream.Write(data, 0, data.Length);
-                msgBox.Focus();
-                msgBox.Clear();
             }
             catch (NullReferenceException)
             {
                 UpdateUI($"Message {msgBox.Text} cannot be send.\r\n" +
                     $"[REASON]: Client is not connected to any server");
             }
-            catch (InvalidOperationException err)
+            catch (InvalidOperationException)
             {
                 UpdateUI($"Message {msgBox.Text} cannot be send.\r\n" +
                     $"[REASON]: Client is not connected to any server");
             }
+            msgBox.Clear();
+            msgBox.Focus();
         }
-
-        private void MsgBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void btnSend_Click(object sender, RoutedEventArgs e)
         {
-            if (msgBox.Text.Length == 0) return;
-            if (e.Key == Key.Return)
-            {
-                HandleSendMessage();
-            }
+            HandleSendmessage();
+        }
+        private void MsgBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter) HandleSendmessage();
         }
     }
 }

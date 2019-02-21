@@ -90,11 +90,13 @@ namespace Server
                 throw err;
             }
         }
-        private async void StartServer()
+        private async void StartStopServer()
         {
             if (tcpListner != null)
             {
-                UpdateUI("Server is already running");
+                UpdateUI("Stopping server...");
+                tcpListner.Stop();
+                ToggleAllowInput();
                 return;
             }
             ToggleAllowInput();
@@ -103,7 +105,7 @@ namespace Server
                 int port = Int32.Parse(portBox.Text);
                 tcpListner = new TcpListener(IPAddress.Any, port);
                 tcpListner.Start();
-                UpdateUI("Listening for a client");
+                UpdateUI("Listening FUCKKKKK a client");
                 while (true)
                 {
                     //create a client
@@ -142,7 +144,7 @@ namespace Server
         private void BtnStartStop_Click(object sender, RoutedEventArgs e)
         {
             UpdateUI("Starting server....");
-            StartServer();
+            StartStopServer();
         }
 
         private void ToggleAllowInput()
@@ -150,7 +152,7 @@ namespace Server
             bufferSize.IsEnabled = !bufferSize.IsEnabled;
             serverNameBox.IsEnabled = !serverNameBox.IsEnabled;
             portBox.IsEnabled = !portBox.IsEnabled;
-            btnStartStop.IsEnabled = !btnStartStop.IsEnabled;
+            btnStartStop.Text = "Stop";
         }
 
         private void ChatBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
