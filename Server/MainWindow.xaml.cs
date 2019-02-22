@@ -126,6 +126,7 @@ namespace Server
             
             try
             {
+                if (!portBox.Text.All(char.IsDigit)) throw new ArgumentException("Port must be a number");
                 if (String.IsNullOrEmpty(serverNameBox.Text)) throw new ArgumentException("Server name cannot empty");
                 if (!bufferSize.Text.All(char.IsDigit)) throw new ArgumentException("Buffer size must be a number");
                 if (bufferSize.Text.Length > 0 && Int32.Parse(bufferSize.Text) == 0 || String.IsNullOrEmpty(bufferSize.Text)) throw new ArgumentException("Buffer size cannot be 0");
