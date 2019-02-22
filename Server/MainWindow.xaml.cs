@@ -23,6 +23,7 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
+    
         }
 
         private void BtnSend_Click(object sender, RoutedEventArgs e)
@@ -196,7 +197,6 @@ namespace Server
             portBox.IsEnabled = !portBox.IsEnabled;
             //Not able to stop the server with a button. You are able by closing the form
             btnStartStop.IsEnabled = !btnStartStop.IsEnabled;
-            //btnStartStop.Content = "Stop" ;
         }
 
         private void MsgBox_KeyDown(object sender, KeyEventArgs e)
@@ -206,6 +206,7 @@ namespace Server
 
         private void HandleSendmessage()
         {
+            if (msgBox.Text.Length == 0) return;
             SendToAllClients($"[Server]: {msgBox.Text}");
             UpdateUI($"[Server]: {msgBox.Text}");
             msgBox.Clear();

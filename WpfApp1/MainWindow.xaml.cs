@@ -40,7 +40,6 @@ namespace MultyClientChatClient
             networkStream = tcpClient.GetStream();
             byte[] data = Encoding.ASCII.GetBytes(usernameBox.Text);
             networkStream.Write(data, 0, data.Length);
-            data = Encoding.ASCII.GetBytes(msgBox.Text);
             try
             {
                 while (true)
@@ -59,6 +58,7 @@ namespace MultyClientChatClient
             }
             catch (SocketException)
             {
+                UpdateUI("Cannot find a server");
                 Console.WriteLine("Cannot find a server");
             }
             catch (System.IO.IOException)
@@ -144,6 +144,16 @@ namespace MultyClientChatClient
         private void MsgBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter) HandleSendmessage();
+        }
+
+        private void ListView_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void ListViewItem_Selected(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

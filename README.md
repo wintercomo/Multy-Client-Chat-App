@@ -16,7 +16,7 @@ De server understeund meerdere clients tegelijkertijd en kan zelf ook berichten 
 ## Generics  
 
 ### Beschrijving van concept in eigen woorden  
-Met generics kan je een datatype aangeven aan methodes en variables. Dit kan gebruikt worden met collecties door een datatype mee te geven. Door dit te doen help je de performance te verbeteren. Dit komt doordat je zonder gebruik van generics een object moet casten naar het gewenste datatype. Dit heet boxing en un-boxing. Wanneer generics hier wordt toegepast is dit niet meer nodig doordat je al hebt aangegeven welk datatype wordt verwacht en de collectie zal alleen die datatype accepteren. 
+Met generics kan je een datatype aangeven aan methodes en variables. Dit kan gebruikt worden met collecties door een datatype mee te geven. Door dit te doen help je de performance te verbeteren. Dit komt doordat je zonder gebruik van generics een object moet casten naar het gewenste datatype. Dit heet boxing en un-boxing. Wanneer generics hier wordt toegepast is dit niet meer nodig doordat je al hebt aangegeven welk datatype wordt verwacht en de collectie zal alleen die datatype accepteren en retourneren. 
 ### Code voorbeeld van je eigen code  
 
     List<NetworkStream> clients = new List<NetworkStream>();
@@ -43,7 +43,7 @@ foreach ( Object obj in myList )
 }
 ```
 
-In dit voorbeeld is te zien dat een string telkens weergegeven wordt door een object op te roepen.
+In dit voorbeeld is te zien dat een string telkens weergegeven wordt door een object op te roepen. Dit komt omdat het object **gecast** wordt naar een string.
 ### Authentieke en gezaghebbende bronnen  
 
  - https://docs.microsoft.com/en-us/dotnet/api/system.collections.arraylist?view=netframework-4.7.
@@ -51,8 +51,16 @@ In dit voorbeeld is te zien dat een string telkens weergegeven wordt door een ob
   
 ## Boxing & Unboxing
 ### Beschrijving van concept in eigen woorden    
-Zoals net al benoemd is boxing en unboxing het concept van een waarde uit een object halen. dit wordt voornamelijk gedaan door **casting**. Dit betekend dat een string 1 kan omgezet worden naar een Int32 met de waarde 1; Met het vorige voorbeeld van generics is te zien dat bijvoorbeeld een String gebruikt wordt vanuit een lijst van objecten. Dit object wordt dan omgezet naar een string om het te kunnen weergeven. Dit is zwaar voor de performance. 
+Zoals net al is benoemd is boxing en unboxing het concept van een waarde uit een object halen. dit wordt voornamelijk gedaan door **casting**. Dit betekend dat een string 1 kan omgezet worden naar een Int32 met de waarde 1; Met het vorige voorbeeld van generics is te zien dat een String gebruikt wordt vanuit een lijst van objecten. Dit object wordt dan omgezet naar een string om het te kunnen weergeven. Dit heet **casting** en dit is zwaar voor de performance. 
 ### Code voorbeeld van je eigen code  
+Een simpel voorbeeld van dit concept het omzetten van een StringBuilder object naar een string. Dit is te zien in het ontvangen van data methode. Hier wordt stukjes van het bericht aan elkaar gezet door de string builder dat uiteindelijk het volledige berricht behoudt. Wanneer het bericht compleet is wordt dit omgezet door een toString() methode dat aan ieder object van C# gekoppeld is. 
+```
+return responseData.ToString();
+```
+> toString() is vertaald na compile naar:
+> string s = `string.Concat(object, object)`
+> Hierdoor wordt eerst de ResponseData in een object omgezet door boxing. Hierna wordt her omgezet naar een String via un-boxing
+
 In de laatste versie van het product is er te zien dat boxing en unboxing wordt gedaan tijdens het versturen van een bericht. Een string wordt in eerste instantie verstuurd maar om dit te kunnen doen wordt de string omgezet in een byte array dat verstuurd wordt via de stream van de client.  Dit wordt gedaan door de getBytes methode.
 ```
 byte[] bytesToSend = Encoding.ASCII.GetBytes($"Verbonden met:{serverNameBox.Text}");
@@ -62,20 +70,21 @@ byte[] bytesToSend = Encoding.ASCII.GetBytes($"Verbonden met:{serverNameBox.Text
 Ook tijdens het ontvangen van een bericht wordt boxing en unboxing gedaan. Hier wordt de byte array omgezet naar een leesbaar bericht (String). Dit stukkje code is wat slimmer dan het verzenden van een bericht. Hier kan je met een buffer het hele bericht inladen. Het uiteindelijke bericht wordt omgezet naar een string. Dit keer via de toString() methode.
 ```
 StringBuilder responseData = new StringBuilder();
-            Console.WriteLine($"RECIEVE MESSAGE: Buffer size : {bufferSize}");
-            byte[] buffer = new byte[bufferSize];
-            do
-            {
-                int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
-                responseData.AppendFormat("{0}", Encoding.ASCII.GetString(buffer, 0, readBytes));
-            } while (networkStream.DataAvailable);
-            return responseData.ToString();
+Console.WriteLine($"RECIEVE MESSAGE: Buffer size : {bufferSize}");
+byte[] buffer = new byte[bufferSize];
+do
+{
+int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
+responseData.AppendFormat("{0}", Encoding.ASCII.GetString(buffer, 0, readBytes));
+} while (networkStream.DataAvailable);
+return responseData.ToString();
 ```
 ### Alternatieven & adviezen  
 Een alternatief is dus generics. Zoals eerder benoemd worden datatypes niet meer omgezet naar objecten en visa versa als je gebruik maakt van generics. Dit zal ook veel verschil maken in performance doordat er geen 2 verschillende objecten onthouden worden.  
 ### Authentieke en gezaghebbende bronnen  
   
  - https://www.google.com/search?client=firefox-b-d&ei=4tVuXNq2H8jPwQLYoK34Cg&q=boxing+and+unboxing+in+c%23&oq=boxing+and+unb&gs_l=psy-ab.3.0.0i203l10.4427.6791..8429...0.0..0.215.1354.6j5j1....2..0....1..gws-wiz.......0i71j0j35i39j0i67j0i131i67j0i131.6R6Mctitoso
+ - https://davidzych.com/when-doing-string-concatenation-in-c-why-dont-you-have-to-call-tostring-on-non-string-variables/
 
 ## Delegates & Invoke  
 ### Beschrijving van concept in eigen woorden  
@@ -123,7 +132,30 @@ https://www.google.com/search?client=firefox-b-d&q=alternative+to+delegate+c%23
 ### Beschrijving van concept in eigen woorden 
 Het concept van **threads** is waar de code op loopt. Alle code wordt **parralel** uitgevoerd op 1 thread en dat is de main (UI) thread. Op deze thread wordt alles synchroon uitgevoerd. Hierdoor loopt alles achter elkaar en kan het programma vastlopen omdat het wacht tot een taak klaar is. Zware taken zou je liever **asynchroon** willen oplossen zodat de main thread nooit hoeft te wachten en dat het gewenste resultaat opgehaalt kan worden wanneer het zo ver is. Dit kan je doen op verschillende manieren.
 ### Code voorbeeld van je eigen code  
-
+Dit is de functie die aangeroepen wordt wanneer een gebruiker wilt verbinden. Het aanmaken van de thread is onderaan het fragment te zien. De Recieve data kijkt continue voor een bericht en wanneer er een bericht is zal de methode het bericht afhandelen. Zonder een nieuwe thread aan te maken zal het programma vastlopen tot er een bericht binnen is. Door dit aschrynchoon te laten lopen door de methode op een aparte thread te runnen zal de main (UI) thread niet vastlopen doordat het wacht voor een bericht. Dit komt omdat dit nu gebeurt op een andere thread die nu wacht op een bericht. Dit wordt gedaan door een thread aan te maken met de methode **ThreadStart()** met de RecieveData methode als **parameter**. Een probleem hiermee is dat er geen parameter met de RecieveData meegegeven kan worden.  Dit kan opgelost woorden door een **lamda expressie** te gebruiken vanplaats de **ThreadStart();**
+```
+private void BtnConnect(object sender, EventArgs e)
+{
+try
+{
+_items.Add("connecting...");
+chatBox.DataSource = null;
+chatBox.DataSource = _items;
+Console.WriteLine("Trying to connect");
+String server = "127.0.0.1";
+Int32 port = 9000;
+tcpClient = new TcpClient(server, port);
+// Create and start a thread
+thread = new Thread(new ThreadStart(ReceiveData));
+thread.Start();
+```
+> De thread met een lamda expressie en parameter: 
+> ```
+> thread = new Thread(()=> RecieveData(**SomeParameter**));
+> thread.Start();
+> ```
 ### Alternatieven & adviezen  
-Een alternatief voor theads zijn **Tasks**.
+Een alternatief voor theads zijn **Tasks** en **AsyncAwait**. Door een task aan te maken vanplaats een thread laat je het werk binnen in de task asynchroon werken. omdat een task uiteindelijk ook weer op een thread draait. Met tasks gebruikt je niet meer de **tread.start** methode maar de **Task.Run** methode. Nadelen van Tasks zijn dat je geen **returns** kan gebruiken binnen in een task. Een task verwacht een taak uit te voeren en zelf niks teruggeven. Voordelen zijn dat je de **status** van een task kan checken en gebruiken om **status afhankelijk methodes** op te roepen. Met Async en await kan je aan het systeem vertellen om te wachten op een asynchrone methode. Wanneer je **await** voor een asynchrone methode zet wordt die methode eigenlijk in een **task** die draait op de **background thread**. Dit wordt meestal gebruikt tijdens netwerk verkeer zoals een verbinding maken met een chatroom.
 ### Authentieke en gezaghebbende bronnen
+https://docs.microsoft.com/en-us/dotnet/csharp/async
+https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task?view=netframework-4.7.2
