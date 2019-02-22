@@ -34,7 +34,7 @@ namespace Server
         {
             chatBox.Items.Add(message);
         }
-
+        //Send a message to all connected clients
         private async void SendToAllClients(string message)
         {
             byte[] bytesToSend = Encoding.ASCII.GetBytes(message);
@@ -84,53 +84,30 @@ namespace Server
                 UpdateClientList();
             }
         }
+        // Check if port is free
         public static bool PortInUse(int port)
 
         {
-
             bool inUse = false;
-
-
-
             IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
-
             IPEndPoint[] ipEndPoints = ipProperties.GetActiveTcpListeners();
-
-
-
-
             foreach (IPEndPoint endPoint in ipEndPoints)
-
             {
-
                 if (endPoint.Port == port)
-
                 {
-
                     inUse = true;
-
                     break;
-
                 }
-
             }
-
-
-
-
             return inUse;
-
         }
+        //try starting the server
         private async void StartServer()
         {
             
             try
             {
-                if (!portBox.Text.All(char.IsDigit)) throw new ArgumentException("Port must be a number");
-                if (String.IsNullOrEmpty(serverNameBox.Text)) throw new ArgumentException("Server name cannot empty");
-                if (!bufferSize.Text.All(char.IsDigit)) throw new ArgumentException("Buffer size must be a number");
-                if (bufferSize.Text.Length > 0 && Int32.Parse(bufferSize.Text) == 0 || String.IsNullOrEmpty(bufferSize.Text)) throw new ArgumentException("Buffer size cannot be 0");
-                if (PortInUse(Int32.Parse(portBox.Text))) throw new ArgumentException($"[ERROR] Port: {portBox.Text} is in use");
+                ValidateConnectionRequest();
                 UpdateUI("Starting server....");
                 TcpClient tcpClient;
                 tcpListner = new TcpListener(IPAddress.Any, Int32.Parse(portBox.Text));
@@ -175,7 +152,16 @@ namespace Server
 
 
         }
-
+        // Validate all connection request values
+        private void ValidateConnectionRequest()
+        {
+            if (portBox.Text.Length == 0 || !portBox.Text.All(char.IsDigit)) throw new ArgumentException("Port must be a number");
+            if (String.IsNullOrEmpty(serverNameBox.Text)) throw new ArgumentException("Server name cannot empty");
+            if (!bufferSize.Text.All(char.IsDigit)) throw new ArgumentException("Buffer size must be a number");
+            if (bufferSize.Text.Length > 0 && Int32.Parse(bufferSize.Text) == 0 || String.IsNullOrEmpty(bufferSize.Text)) throw new ArgumentException("Buffer size cannot be 0");
+            if (PortInUse(Int32.Parse(portBox.Text))) throw new ArgumentException($"[ERROR] Port: {portBox.Text} is in use");
+        }
+        // Update the UI with all connected clients
         private void UpdateClientList()
         {
             listClients.Items.Clear();
@@ -184,13 +170,13 @@ namespace Server
                 listClients.Items.Add(client.Value);
             }
         }
-
+        // Start server
         private void BtnStartStop_Click(object sender, RoutedEventArgs e)
         {
             
             StartServer();
         }
-
+        //Disables the input fields
         private void ToggleAllowInput()
         {
             bufferSize.IsEnabled = !bufferSize.IsEnabled;

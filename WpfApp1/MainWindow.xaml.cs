@@ -25,6 +25,7 @@ namespace MultyClientChatClient
         {
             chatBox.Items.Add(message);
         }
+        //Validate the given IP Adres
         private Boolean ValidateIpAdress(string ipString)
         {
             if (String.IsNullOrWhiteSpace(ipString)) return false;
@@ -81,14 +82,15 @@ namespace MultyClientChatClient
             usernameBox.IsEnabled = !usernameBox.IsEnabled;
             txtBufferSize.IsEnabled = !txtBufferSize.IsEnabled;
         }
+        //Try connecting to a server
         private async void BtnConnect(object sender, RoutedEventArgs e)
         {
             try
             {
                 // error handling
                 String server = txtServerIp.Text;
+                if (!txtPort.Text.All(char.IsDigit)) throw new ArgumentException("Port must be a number");
                 if (String.IsNullOrEmpty(usernameBox.Text)) throw new ArgumentException("Username cannot be null or empty");
-                //if (String.IsNullOrEmpty(txtBufferSize.Text)) UpdateUI("No buffer size specified. Using default (1024)");
                 if (!txtBufferSize.Text.All(char.IsDigit)) throw new ArgumentException("Buffer size must be a number");
                 if (txtBufferSize.Text.Length > 0 && Int32.Parse(txtBufferSize.Text) == 0 || String.IsNullOrEmpty(txtBufferSize.Text)) throw new ArgumentException("Buffer size cannot be 0");
                 if (!ValidateIpAdress(server)) throw new ArgumentException($"Given IP adress: '{server}' is not in the correct format");
@@ -116,6 +118,7 @@ namespace MultyClientChatClient
                 UpdateUI($"Given port adress: '{txtPort.Text}' is not in the correct format (0-9999)");
             }
         }
+        // try sending a message
         private void HandleSendmessage()
         {
             try
