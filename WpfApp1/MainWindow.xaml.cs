@@ -54,13 +54,12 @@ namespace MultyClientChatClient
                 }
                 networkStream.Close();
                 tcpClient.Close();
-                UpdateUI("Connection closed!");
+                UpdateUI("Host closed connection!");
                 ToggleAllowInput();
             }
             catch (SocketException)
             {
                 UpdateUI("Cannot find a server");
-                Console.WriteLine("Cannot find a server");
             }
             catch (System.IO.IOException)
             {
@@ -72,6 +71,20 @@ namespace MultyClientChatClient
                 UpdateUI("Oops something went wrong");
                 throw err;
             }
+            finally
+            {
+                networkStream.Close();
+                tcpClient.Close();
+                AllowInput();
+            }
+        }
+        private void AllowInput()
+        {
+            txtPort.IsEnabled = true;
+            txtServerIp.IsEnabled = true;
+            connectButton.IsEnabled = true;
+            usernameBox.IsEnabled = true;
+            txtBufferSize.IsEnabled = true;
         }
         //Disable all connection inputs
         private void ToggleAllowInput()
@@ -89,11 +102,7 @@ namespace MultyClientChatClient
             {
                 // error handling
                 String server = txtServerIp.Text;
-                if (!txtPort.Text.All(char.IsDigit)) throw new ArgumentException("Port must be a number");
-                if (String.IsNullOrEmpty(usernameBox.Text)) throw new ArgumentException("Username cannot be null or empty");
-                if (!txtBufferSize.Text.All(char.IsDigit)) throw new ArgumentException("Buffer size must be a number");
-                if (txtBufferSize.Text.Length > 0 && Int32.Parse(txtBufferSize.Text) == 0 || String.IsNullOrEmpty(txtBufferSize.Text)) throw new ArgumentException("Buffer size cannot be 0");
-                if (!ValidateIpAdress(server)) throw new ArgumentException($"Given IP adress: '{server}' is not in the correct format");
+                ValidateConnectionRequest(server);
                 UpdateUI("Connecting...");
                 //PASS => create a client
                 Int32 port = Int32.Parse(txtPort.Text);
@@ -102,7 +111,7 @@ namespace MultyClientChatClient
                 ReceiveData();
                 //Disable buttons and input fields
                 ToggleAllowInput();
-                
+
             }
             catch (ArgumentException err)
             {
@@ -114,10 +123,19 @@ namespace MultyClientChatClient
             }
             catch (FormatException err)
             {
-                Console.WriteLine("BIG ERR" +err);
                 UpdateUI($"Given port adress: '{txtPort.Text}' is not in the correct format (0-9999)");
             }
         }
+
+        private void ValidateConnectionRequest(string server)
+        {
+            if (!txtPort.Text.All(char.IsDigit)) throw new ArgumentException("Port must be a number");
+            if (String.IsNullOrEmpty(usernameBox.Text)) throw new ArgumentException("Username cannot be null or empty");
+            if (!txtBufferSize.Text.All(char.IsDigit)) throw new ArgumentException("Buffer size must be a number");
+            if (txtBufferSize.Text.Length > 0 && Int32.Parse(txtBufferSize.Text) == 0 || String.IsNullOrEmpty(txtBufferSize.Text)) throw new ArgumentException("Buffer size cannot be 0");
+            if (!ValidateIpAdress(server)) throw new ArgumentException($"Given IP adress: '{server}' is not in the correct format");
+        }
+
         // try sending a message
         private void HandleSendmessage()
         {
@@ -147,16 +165,6 @@ namespace MultyClientChatClient
         private void MsgBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter) HandleSendmessage();
-        }
-
-        private void ListView_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void ListViewItem_Selected(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }

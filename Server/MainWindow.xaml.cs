@@ -75,6 +75,10 @@ namespace Server
                     UpdateUI($"[{allClients[currentClient]}]: {responseData}");
                 }
             }
+            catch (ObjectDisposedException)
+            {
+
+            }
             catch (IOException)
             {
                 // when user leaves. Remove from the list
@@ -135,19 +139,15 @@ namespace Server
             catch (ObjectDisposedException)
             {
                 UpdateUI($"Server is stopped");
+                
             }
             catch (SocketException e)
             {
-                
-                Console.WriteLine("server error: {0}", e);
+                throw e;
             }
             finally
             {
-                if (tcpListner != null)
-                {
-                    tcpListner.Stop();
-
-                }
+                StopServer();
             }
 
 
@@ -165,25 +165,56 @@ namespace Server
         private void UpdateClientList()
         {
             listClients.Items.Clear();
-            foreach (var client in allClients)
+            if (allClients.Count == 0)
             {
-                listClients.Items.Add(client.Value);
+                listClients.Items.Add("No clients connected.");
+                return;
             }
+            foreach (var client in allClients) listClients.Items.Add(client.Value);
         }
         // Start server
         private void BtnStartStop_Click(object sender, RoutedEventArgs e)
         {
-            
+            if (btnStartStop.Content.ToString() == "Stop")
+            {
+                StopServer();
+                return;
+            }
             StartServer();
+            btnStartStop.Content = "Stop";
+
         }
+
+        private void StopServer()
+        {
+            btnStartStop.Content = "Start";
+            foreach (var client in allClients.ToList())
+            {
+                SendToAllClients("bye");
+                if (client.Key.Connected)
+                {
+                    client.Key.Close();
+                    allClients.Remove(client.Key);
+                }
+            }
+            tcpListner.Stop();
+            AllowInput();
+            UpdateClientList();
+        }
+
+        private void AllowInput()
+        {
+            bufferSize.IsEnabled = true;
+            serverNameBox.IsEnabled = true;
+            portBox.IsEnabled = true;
+        }
+
         //Disables the input fields
         private void ToggleAllowInput()
         {
             bufferSize.IsEnabled = !bufferSize.IsEnabled;
             serverNameBox.IsEnabled = !serverNameBox.IsEnabled;
             portBox.IsEnabled = !portBox.IsEnabled;
-            //Not able to stop the server with a button. You are able by closing the form
-            btnStartStop.IsEnabled = !btnStartStop.IsEnabled;
         }
 
         private void MsgBox_KeyDown(object sender, KeyEventArgs e)
