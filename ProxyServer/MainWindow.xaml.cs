@@ -34,7 +34,7 @@ namespace ProxyServer
                 ServerRunning=false
             };
             this.DataContext = settings;
-            LogItems.Add(new LogItem(LogItem.REQUEST) {
+            LogItems.Add(new LogItem(LogItem.MESSAGE) {
                 LogItemInfo = "Log van:\r\n" +
                 "   * request headers\r\n" +
                 "   * Response headers\r\n" +
@@ -57,7 +57,7 @@ namespace ProxyServer
                 }
                 tcpListner = new TcpListener(IPAddress.Any, 8090);
                 tcpListner.Start();
-                LogItems.Add(new LogItem(LogItem.REQUEST) { LogItemInfo = "Listening for HTTP REQUEST" });
+                LogItems.Add(new LogItem(LogItem.MESSAGE) { LogItemInfo = "Listening for HTTP REQUEST" });
                 settings.ServerRunning = true;
                 // keep looking for a request
                 while (true)
@@ -104,7 +104,7 @@ namespace ProxyServer
             // generate request
             byte[] httpRequest = Encoding.ASCII.GetBytes(httpRequestString);
             stream.Write(httpRequest, 0, httpRequest.Length);
-            LogItems.Add(new LogItem(LogItem.MESSAGE) { LogItemInfo = httpRequestString });
+            LogItems.Add(new LogItem(LogItem.REQUEST) { LogItemInfo = httpRequestString });
             // get response from request and send it back to client
             string responseData = await chatApp.CreateMessageFromReading(stream, settings.BufferSize);
             LogItems.Add(new LogItem(LogItem.RESPONSE) { LogItemInfo = responseData });
