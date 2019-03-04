@@ -16,3 +16,5 @@ C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\ClassLibrary1.dll
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\ClassLibrary1.pdb
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.csproj.CopyComplete
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\ProxyClasses.dll
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\ProxyClasses.pdb

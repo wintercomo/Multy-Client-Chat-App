@@ -1,0 +1,9 @@
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\bin\Debug\netstandard2.0\ProxyClasses.deps.json
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\bin\Debug\netstandard2.0\ProxyClasses.dll
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\bin\Debug\netstandard2.0\ProxyClasses.pdb
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.csprojAssemblyReference.cache
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.csproj.CoreCompileInputs.cache
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.AssemblyInfoInputs.cache
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.AssemblyInfo.cs
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.dll
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.pdb

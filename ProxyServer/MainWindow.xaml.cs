@@ -1,4 +1,5 @@
 ﻿using ClassLibrary1;
+using ProxyClasses;
 using System;
 using System.Collections.ObjectModel;
 using System.Net;
@@ -6,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 
 namespace ProxyServer
 {
@@ -14,15 +16,25 @@ namespace ProxyServer
     /// </summary>
     public partial class MainWindow : Window
     {
-        TcpListener tcpListner;
+        private ObservableCollection<LogItem> LogItems = new ObservableCollection<LogItem>();
         ChatAppFunctions chatApp = new ChatAppFunctions();
+        TcpListener tcpListner;
         NetworkStream clientStream;
         TcpClient tcpClient;
-        private ObservableCollection<LogItem> LogItems = new ObservableCollection<LogItem>();
+        ProxySettings settings;
         public MainWindow()
         {
             InitializeComponent();
-            LogItems.Add(new LogItem() {
+            settings = new ProxySettings {
+                Port = 26, CacheTimeout= 60000, BufferSize=2,
+                CheckModifiedContent =true, ContentFilterOn=true,
+                BasicAuthOn = false, AllowChangeHeaders= true,
+                LogRequestHeaders = true, LogContentIn= true,
+                LogContentOut=true, LogCLientInfo = true,
+                ServerRunning=false
+            };
+            this.DataContext = settings;
+            LogItems.Add(new LogItem(LogItem.REQUEST) {
                 LogItemInfo = "Log van:\r\n" +
                 "   * request headers\r\n" +
                 "   * Response headers\r\n" +
@@ -30,23 +42,23 @@ namespace ProxyServer
                 "   * content uit\r\n" +
                 "   * Client (Which browser is connected)"
             });
-
             logListBox.ItemsSource = LogItems;
         }
+
         private async void BtnStartStopProxy_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // stop server if running
-                if (tcpListner != null)
+                if (settings.ServerRunning)
                 {
                     StopProxyServer();
                     return;
                 }
-                UpdateUI("Starting server....");
                 tcpListner = new TcpListener(IPAddress.Any, 8090);
                 tcpListner.Start();
-                UpdateUI("Listening for HTTP Requests");
+                LogItems.Add(new LogItem(LogItem.REQUEST) { LogItemInfo = "Listening for HTTP REQUEST" });
+                settings.ServerRunning = true;
                 // keep looking for a request
                 while (true)
                 {
@@ -54,11 +66,12 @@ namespace ProxyServer
                     tcpClient = await tcpListner.AcceptTcpClientAsync();
                     clientStream = tcpClient.GetStream();
                     // get the request details
-                    string requestInfo = await chatApp.CreateMessageFromReading(clientStream, 1024);
+                    string requestInfo = await chatApp.CreateMessageFromReading(clientStream, settings.BufferSize);
                     // send request if no spam request
                     if (!requestInfo.Contains("detectportal"))
                     {
-                        UpdateUI($"[REQUEST] \r\n {requestInfo}");
+                        LogItems.Add(new LogItem(LogItem.REQUEST) { LogItemInfo = requestInfo });
+                        //UpdateUI($"[REQUEST] \r\n {requestInfo}");
                         await HandleHttpRequest(requestInfo);
                         clientStream.Close();
                     }
@@ -66,11 +79,11 @@ namespace ProxyServer
             }
             catch (HttpListenerException)
             {
-                UpdateUI("Server stopped running! ERROR");
+                LogItems.Add(new LogItem(LogItem.MESSAGE) { LogItemInfo = "Server stopped running Due to ERROR" });
             }
             catch (ObjectDisposedException err)
             {
-                UpdateUI($"Connot get request. server stopped, ERROR LOG: \r\n " + err.Message);
+                LogItems.Add(new LogItem(LogItem.MESSAGE) { LogItemInfo = "Connot get request. server stopped, ERROR LOG: \r\n " + err.Message });
             }
             catch (Exception)
             {
@@ -84,34 +97,27 @@ namespace ProxyServer
             TcpClient tcp = new TcpClient("localhost", 8080)
             {
                 NoDelay = false,
-                ReceiveTimeout = 60000,
-                ReceiveBufferSize = 25000
+                ReceiveTimeout = settings.CacheTimeout,
+                ReceiveBufferSize = settings.BufferSize
             };
             NetworkStream stream = tcp.GetStream();
             // generate request
-            byte[] httpRequest = Encoding.ASCII.GetBytes(httpRequestString.ToString());
-            UpdateUI($"[PROXY] \r\n{ httpRequestString}");
+            byte[] httpRequest = Encoding.ASCII.GetBytes(httpRequestString);
             stream.Write(httpRequest, 0, httpRequest.Length);
-            // generate response
-            byte[] httpResponse = new byte[tcp.ReceiveBufferSize];
-            int lastreceive = stream.Read(httpResponse, 0, tcp.ReceiveBufferSize);
-            string responseData = Encoding.ASCII.GetString(httpResponse, 0, tcp.ReceiveBufferSize);
-            // Show response
-            UpdateUI($"[RESPONSE] \r\n {responseData}");
+            LogItems.Add(new LogItem(LogItem.MESSAGE) { LogItemInfo = httpRequestString });
+            // get response from request and send it back to client
+            string responseData = await chatApp.CreateMessageFromReading(stream, settings.BufferSize);
+            LogItems.Add(new LogItem(LogItem.RESPONSE) { LogItemInfo = responseData });
             byte[] bytesToSend = Encoding.ASCII.GetBytes(responseData);
             await clientStream.WriteAsync(bytesToSend, 0, bytesToSend.Length);
         }
 
-        private void UpdateUI(String logMessage)
-        {
-            LogItems.Add(new LogItem() { LogItemInfo = logMessage });
-        }
-
         private void StopProxyServer()
         {
-            UpdateUI("Stopping proxy Server...");
+            LogItems.Add(new LogItem(LogItem.MESSAGE) { LogItemInfo = "Stopping proxy Server..." });
             tcpListner.Stop();
-            UpdateUI("Server stopped!");
+            settings.ServerRunning = false;
+            LogItems.Add(new LogItem(LogItem.MESSAGE) { LogItemInfo = "Proxy server Stopped Running" });
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

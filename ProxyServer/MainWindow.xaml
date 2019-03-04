@@ -35,6 +35,7 @@
             Grid.Row="0" 
             Margin="6,10,0,2" Grid.Column="1"
             >
+
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -56,29 +57,40 @@
 
             <Label Grid.Row="1" Grid.Column="0" Content="Proxy port" HorizontalAlignment="Right"/>
             <Label Grid.Row="2" Grid.Column="0" Content="Cache time out in seconds" HorizontalAlignment="Right"/>
-            <Label Grid.Row="3" Grid.Column="0" Content="Check op geweizigde content op server aan/uit" HorizontalAlignment="Right"/>
-            <Label Grid.Row="4" Grid.Column="0" Content="Zet content filter aan/uit" HorizontalAlignment="Right"/>
-            <Label Grid.Row="5" Grid.Column="0" Content="Verander headers aan/uit" HorizontalAlignment="Right"/>
-            <Label Grid.Row="6" Grid.Column="0" Content="Set basis authenticatie aan/uit" HorizontalAlignment="Right"/>
-            <Label Grid.Row="7" Grid.Column="0" Content="Buffer size" HorizontalAlignment="Right"/>
+            <Label Grid.Row="3" Grid.Column="0" Content="Buffer size" HorizontalAlignment="Right"/>
+            <Label Grid.Row="4" Grid.Column="0" Content="Check op geweizigde content op server aan/uit" HorizontalAlignment="Right"/>
+            <Label Grid.Row="5" Grid.Column="0" Content="Zet content filter aan/uit" HorizontalAlignment="Right"/>
+            <Label Grid.Row="6" Grid.Column="0" Content="Verander headers aan/uit" HorizontalAlignment="Right"/>
+            <Label Grid.Row="7" Grid.Column="0" Content="Set basis authenticatie aan/uit" HorizontalAlignment="Right"/>
             <Label Grid.Row="8" Grid.Column="0" Content="Logging request headers aan/uit"  HorizontalAlignment="Right"/>
             <Label Grid.Row="9" Grid.Column="0" Content="Logging content In"  HorizontalAlignment="Right"/>
             <Label Grid.Row="10" Grid.Column="0" Content="Logging content out"  HorizontalAlignment="Right"/>
             <Label Grid.Row="11" Grid.Column="0" Content="Logging client info"  HorizontalAlignment="Right"/>
 
-            <TextBox x:Name="txtPort" Grid.Row="1" Grid.Column="1" Text="9000" Margin="5"/>
-            <TextBox x:Name="txtCacheTimeout" Grid.Row="2" Grid.Column="1"  Text="300 (0=no cache)" Margin="5"/>
-            <CheckBox x:Name="checkBoxCheckModifiedContent" Grid.Row="3" Grid.Column="1" Margin="5"/>
-            <CheckBox x:Name="checkBoxContentFilter" Grid.Row="4" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <CheckBox x:Name="checkBoxChangeHeaders" Grid.Row="5" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <CheckBox x:Name="checkBoxBasicAuth" Grid.Row="6" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <TextBox x:Name="txtBufferSize" Grid.Row="7" Grid.Column="1" Text="9000" Margin="5,4"/>
-            <CheckBox x:Name="checkBoxLogRequestHeaders" Grid.Row="8" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <CheckBox x:Name="checkBoxLogContentIN" Grid.Row="9" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <CheckBox x:Name="checkBoxLogContentOut" Grid.Row="10" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <CheckBox x:Name="checkBoxLogClient" Grid.Row="11" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <TextBox x:Name="txtPort" Grid.Row="1" Grid.Column="1" Text ="{Binding Port, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+            <TextBox x:Name="txtCacheTimeout" Grid.Row="2" Grid.Column="1"  Text="{Binding CacheTimeout, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
+            <TextBox x:Name="txtBufferSize" Grid.Row="3" Grid.Column="1" Text="{Binding BufferSize, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,4"/>
+            <CheckBox x:Name="checkBoxContentFilter" IsChecked="{Binding ContentFilterOn, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox x:Name="checkBoxChangeHeaders" IsChecked="{Binding AllowChangeHeaders, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox x:Name="checkBoxBasicAuth" IsChecked="{Binding BasicAuthOn, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox Grid.Row="7" Grid.Column="1" x:Name="checkBoxCheckModifiedContent" IsChecked="{Binding CheckModifiedContent, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}"  Margin="5"/>
+            <CheckBox x:Name="checkBoxLogRequestHeaders" IsChecked="{Binding LogRequestHeaders, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="8" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox x:Name="checkBoxLogContentIN" IsChecked="{Binding LogContentIn, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="9" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox x:Name="checkBoxLogContentOut" IsChecked="{Binding LogContentOut, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="10" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox x:Name="checkBoxLogClient" IsChecked="{Binding LogCLientInfo, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="11" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
 
             <Button x:Name="btnStartStopProxy" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="Start / Stop proxy" Padding="5" Margin="10" Click="BtnStartStopProxy_Click"/>
+        </Grid>
+        <Grid Grid.Column="1" Margin="10,10,20,10" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" Content="Server Running:"/>
+            <Label x:Name="button" Grid.Row="0" Grid.Column="1" Content="{Binding ServerRunning, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
         </Grid>
 
 

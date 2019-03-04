@@ -63,7 +63,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LogItem.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -99,6 +98,10 @@
     <ProjectReference Include="..\ClassLibrary1\MultyClientChatAppFunctions.csproj">
       <Project>{b24fa812-e158-448d-94f2-72aee7a318da}</Project>
       <Name>MultyClientChatAppFunctions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProxyClasses\ProxyClasses.csproj">
+      <Project>{ee51ae6e-4998-455f-b5d5-d5d9b1d716ab}</Project>
+      <Name>ProxyClasses</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
