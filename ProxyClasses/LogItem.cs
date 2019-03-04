@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProxyServer;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
@@ -14,13 +15,18 @@ namespace ProxyClasses
         private string type; // { PROXY, REQUEST, RESPONSE, MESSAGE };
         private string method;
         private string body;
+        ProxySettings settings;
         Dictionary<string, string> headers = new Dictionary<string, string>();
 
 
-        public LogItem(string type)
+        public LogItem(string type, ProxySettings settings)
         {
-
             this.type = type;
+            this.settings = settings;
+        }
+        public string Method
+        {
+            get { return this.method; }
         }
         //TODO edit this function so the type is used to display different data
         public string LogItemInfo
@@ -36,20 +42,12 @@ namespace ProxyClasses
                         break;
                     case REQUEST:
                         this.logItemInfo = $"{this.method}\r\n";
-                        foreach (KeyValuePair<string, string> entry in headers)
-                        {
-                            this.logItemInfo += $"{entry.Key + entry.Value}\r\n";
-                            // do something with entry.Value or entry.Key
-                        }
+                        GenerateHeaders();
                         this.logItemInfo += this.body;
                         break;
                     case RESPONSE:
                         this.logItemInfo = $"{this.method}\r\n";
-                        foreach (KeyValuePair<string, string> entry in headers)
-                        {
-                            this.logItemInfo += $"{entry.Key + entry.Value}\r\n";
-                            // do something with entry.Value or entry.Key
-                        }
+                        GenerateHeaders();
                         this.logItemInfo += this.body;
                         break;
                     default:
@@ -58,6 +56,20 @@ namespace ProxyClasses
                 this.NotifyPropertyChanged("logItemInfo");
             }
         }
+
+        private void GenerateHeaders()
+        {
+            if (this.settings.LogRequestHeaders) 
+            {
+                foreach (KeyValuePair<string, string> entry in headers)
+                {
+                    this.logItemInfo += $"{entry.Key + entry.Value}\r\n";
+                    // do something with entry.Value or entry.Key
+                }
+            }
+            
+        }
+
         // Get the method/headers and body and save them seperately for later use
         private void SeperateProtocolElements(string value)
         {
@@ -85,7 +97,7 @@ namespace ProxyClasses
             if (index != -1)
             {
                 string headerType = result[i].Substring(0, index);
-                string header = result[i].Substring(index + 1);
+                string header = result[i].Substring(index);
                 headers.Add(headerType, header);
             }
         }
