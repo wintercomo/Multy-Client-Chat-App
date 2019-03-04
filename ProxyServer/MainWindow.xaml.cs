@@ -1,5 +1,6 @@
 ﻿using ClassLibrary1;
 using System;
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -17,15 +18,20 @@ namespace ProxyServer
         ChatAppFunctions chatApp = new ChatAppFunctions();
         NetworkStream clientStream;
         TcpClient tcpClient;
+        private ObservableCollection<LogItem> LogItems = new ObservableCollection<LogItem>();
         public MainWindow()
         {
             InitializeComponent();
-            logListBox.Items.Add("Log van:\r\n" +
+            LogItems.Add(new LogItem() {
+                LogItemInfo = "Log van:\r\n" +
                 "   * request headers\r\n" +
                 "   * Response headers\r\n" +
                 "   * content in\r\n" +
                 "   * content uit\r\n" +
-                "   * Client (Which browser is connected)");
+                "   * Client (Which browser is connected)"
+            });
+
+            logListBox.ItemsSource = LogItems;
         }
         private async void BtnStartStopProxy_Click(object sender, RoutedEventArgs e)
         {
@@ -40,7 +46,7 @@ namespace ProxyServer
                 UpdateUI("Starting server....");
                 tcpListner = new TcpListener(IPAddress.Any, 8090);
                 tcpListner.Start();
-                UpdateUI("Listening for a client");
+                UpdateUI("Listening for HTTP Requests");
                 // keep looking for a request
                 while (true)
                 {
@@ -49,11 +55,11 @@ namespace ProxyServer
                     clientStream = tcpClient.GetStream();
                     // get the request details
                     string requestInfo = await chatApp.CreateMessageFromReading(clientStream, 1024);
-                    // send request
+                    // send request if no spam request
                     if (!requestInfo.Contains("detectportal"))
                     {
                         UpdateUI($"[REQUEST] \r\n {requestInfo}");
-                        await HandleHttpRequest();
+                        await HandleHttpRequest(requestInfo);
                         clientStream.Close();
                     }
                 }
@@ -72,7 +78,7 @@ namespace ProxyServer
             }
         }
 
-        private async Task HandleHttpRequest()
+        private async Task HandleHttpRequest(string httpRequestString)
         {
             // generate a client to user for getting the actual response
             TcpClient tcp = new TcpClient("localhost", 8080)
@@ -83,12 +89,7 @@ namespace ProxyServer
             };
             NetworkStream stream = tcp.GetStream();
             // generate request
-            const string httpRequestString = "GET http://localhost:8080/test HTTP/1.0\r\n\r\n" +
-                "Host: localhost:8090\r\n" +
-                "Connection: keep-alive\r\n" +
-                "User-Agent: Mozilla/5.0\r\n" +
-                "\r\n";
-            byte[] httpRequest = Encoding.ASCII.GetBytes(httpRequestString);
+            byte[] httpRequest = Encoding.ASCII.GetBytes(httpRequestString.ToString());
             UpdateUI($"[PROXY] \r\n{ httpRequestString}");
             stream.Write(httpRequest, 0, httpRequest.Length);
             // generate response
@@ -103,7 +104,7 @@ namespace ProxyServer
 
         private void UpdateUI(String logMessage)
         {
-            logListBox.Items.Add(logMessage);
+            LogItems.Add(new LogItem() { LogItemInfo = logMessage });
         }
 
         private void StopProxyServer()
@@ -111,6 +112,11 @@ namespace ProxyServer
             UpdateUI("Stopping proxy Server...");
             tcpListner.Stop();
             UpdateUI("Server stopped!");
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            LogItems.Clear();
         }
     }
 }

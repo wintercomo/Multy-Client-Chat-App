@@ -22,13 +22,13 @@
             Grid.Column="0"
             Margin="10,10,20,10"
             >
-            <ListBox x:Name="logListBox"/>
+            <ListBox x:Name="logListBox" DisplayMemberPath="LogItemInfo"/>
         </Grid>
         <Grid
             Grid.Column="0"
             Margin="10,10,20,10" Grid.Row="1"
             >
-            <Button>Clear Log</Button>
+            <Button Click="Button_Click">Clear Log</Button>
         </Grid>
 
         <Grid
@@ -66,9 +66,9 @@
             <Label Grid.Row="10" Grid.Column="0" Content="Logging content out"  HorizontalAlignment="Right"/>
             <Label Grid.Row="11" Grid.Column="0" Content="Logging client info"  HorizontalAlignment="Right"/>
 
-            <TextBox x:Name="usernameBox" Grid.Row="1" Grid.Column="1" Text="Client 1" Margin="5"/>
-            <TextBox x:Name="txtServerIp" Grid.Row="2" Grid.Column="1" Text="300 (0=no cache)" Margin="5"/>
-            <TextBox x:Name="txtPort" Grid.Row="3" Grid.Column="1" Text="9000" Margin="5"/>
+            <TextBox x:Name="txtPort" Grid.Row="1" Grid.Column="1" Text="9000" Margin="5"/>
+            <TextBox x:Name="txtCacheTimeout" Grid.Row="2" Grid.Column="1"  Text="300 (0=no cache)" Margin="5"/>
+            <CheckBox x:Name="checkBoxCheckModifiedContent" Grid.Row="3" Grid.Column="1" Margin="5"/>
             <CheckBox x:Name="checkBoxContentFilter" Grid.Row="4" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
             <CheckBox x:Name="checkBoxChangeHeaders" Grid.Row="5" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
             <CheckBox x:Name="checkBoxBasicAuth" Grid.Row="6" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
