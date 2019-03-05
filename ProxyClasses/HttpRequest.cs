@@ -43,7 +43,7 @@ namespace ProxyClasses
             if (index != -1)
             {
                 string headerType = result[i].Substring(0, index);
-                string header = result[i].Substring(index);
+                string header = result[i].Substring(index + 1);
                 headers.Add(headerType, header);
             }
         }

@@ -1,4 +1,4 @@
-﻿<Window x:Class="ProxyServer.MainWindow"
+﻿<Window x:Class="ProxyServer.ProxyserverWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -22,7 +22,30 @@
             Grid.Column="0"
             Margin="10,10,20,10"
             >
-            <ListBox x:Name="logListBox" DisplayMemberPath="LogItemInfo"/>
+            <ListBox x:Name="logListBox">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Row="0" Grid.Column="0" Content="Method"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Method}"/>
+                            <Label Grid.Row="1" Grid.Column="0" Content="Headers:"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Headers}"/>
+                            <Label Grid.Row="2" Grid.Column="0" Content="Body:"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Body}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </Grid>
         <Grid
             Grid.Column="0"

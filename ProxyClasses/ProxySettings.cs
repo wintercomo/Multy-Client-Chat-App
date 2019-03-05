@@ -37,6 +37,8 @@ namespace ProxyServer
                 if (value != portValue)
                 {
                     portValue = value;
+                    this.NotifyPropertyChanged("portValue");
+
                 }
             }
         }
@@ -48,6 +50,8 @@ namespace ProxyServer
                 if (value != cacheTimeoutValue)
                 {
                     cacheTimeoutValue = value;
+                    this.NotifyPropertyChanged("cacheTimeoutValue");
+
                 }
             }
         }
@@ -59,6 +63,8 @@ namespace ProxyServer
                 if (value != bufferSizeValue)
                 {
                     bufferSizeValue = value;
+                    this.NotifyPropertyChanged("bufferSizeValue");
+
                 }
             }
         }
@@ -70,6 +76,8 @@ namespace ProxyServer
                 if (value != checkModifiedContent)
                 {
                     checkModifiedContent = value;
+                    this.NotifyPropertyChanged("checkModifiedContent");
+
                 }
             }
         }
@@ -81,6 +89,8 @@ namespace ProxyServer
                 if (value != contentFilterOn)
                 {
                     contentFilterOn = value;
+                    this.NotifyPropertyChanged("contentFilterOn");
+
                 }
             }
         }
@@ -92,6 +102,8 @@ namespace ProxyServer
                 if (value != basicAuthOn)
                 {
                     basicAuthOn = value;
+                    this.NotifyPropertyChanged("basicAuthOn");
+
                 }
             }
         }
@@ -103,6 +115,8 @@ namespace ProxyServer
                 if (value != allowChangeHeaders)
                 {
                     allowChangeHeaders = value;
+                    this.NotifyPropertyChanged("allowChangeHeaders");
+
                 }
             }
         }
@@ -115,6 +129,8 @@ namespace ProxyServer
                 if (value != logRequestHeaders)
                 {
                     logRequestHeaders = value;
+                    this.NotifyPropertyChanged("logRequestHeaders");
+
                 }
             }
         }
@@ -126,6 +142,8 @@ namespace ProxyServer
                 if (value != logContentIn)
                 {
                     logContentIn = value;
+                    this.NotifyPropertyChanged("logContentIn");
+
                 }
             }
         }
@@ -137,6 +155,8 @@ namespace ProxyServer
                 if (value != logContentOut)
                 {
                     logContentOut = value;
+                    this.NotifyPropertyChanged("logContentOut");
+
                 }
             }
         }
@@ -148,6 +168,8 @@ namespace ProxyServer
                 if (value != logCLientInfo)
                 {
                     logCLientInfo = value;
+                    this.NotifyPropertyChanged("logCLientInfo");
+
                 }
             }
         }

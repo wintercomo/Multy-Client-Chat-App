@@ -28,6 +28,27 @@ namespace ProxyClasses
         {
             get { return this.method; }
         }
+        public string Type
+        {
+            get { return this.type; }
+        }
+        public string Headers
+        {
+            get
+            {
+                string sm = "";
+                foreach (KeyValuePair<string, string> entry in headers)
+                {
+                    sm += $"{entry.Key+ entry.Value}\r\n";
+                    // do something with entry.Value or entry.Key
+                }
+                return sm; 
+            }
+        }
+        public string Body
+        {
+            get { return this.body; }
+        }
         //TODO edit this function so the type is used to display different data
         public string LogItemInfo
         {
@@ -42,12 +63,12 @@ namespace ProxyClasses
                         break;
                     case REQUEST:
                         this.logItemInfo = $"{this.method}\r\n";
-                        GenerateHeaders();
+                        getHeadersString();
                         this.logItemInfo += this.body;
                         break;
                     case RESPONSE:
                         this.logItemInfo = $"{this.method}\r\n";
-                        GenerateHeaders();
+                        getHeadersString();
                         this.logItemInfo += this.body;
                         break;
                     default:
@@ -57,7 +78,7 @@ namespace ProxyClasses
             }
         }
 
-        private void GenerateHeaders()
+        private void getHeadersString()
         {
             if (this.settings.LogRequestHeaders) 
             {
@@ -80,7 +101,7 @@ namespace ProxyClasses
                 {
                     this.method = result[i];
                 }
-                if (i > 0 && i != result.Length - 1)
+                else if (settings.LogRequestHeaders && i > 0 && i != result.Length - 1)
                 {
                     GetHeaders(result, i);
                 }
