@@ -9,8 +9,10 @@ namespace ProxyClasses
     public class LogItem : INotifyPropertyChanged
     {
         public const string REQUEST = "REQUEST";
+        public const string PROXY_REQUEST = "PROXY REQUEST";
         public const string RESPONSE = "RESPONSE";
         public const string MESSAGE = "MESSAGE";
+        public const string CACHED_RESPONSE = "CACHED RESPONSE";
         private string logItemInfo;
         private string type; // { PROXY, REQUEST, RESPONSE, MESSAGE };
         private string method;
@@ -32,10 +34,18 @@ namespace ProxyClasses
         {
             get { return this.type; }
         }
+        public Dictionary<string,string> getHeadersList
+        {
+            get { return this.headers; }
+        }
         public string Headers
         {
             get
             {
+                if (!settings.LogRequestHeaders)
+                {
+                    return "";
+                }
                 string sm = "";
                 foreach (KeyValuePair<string, string> entry in headers)
                 {
@@ -52,44 +62,27 @@ namespace ProxyClasses
         //TODO edit this function so the type is used to display different data
         public string LogItemInfo
         {
-            get { return this.logItemInfo; }
+            get {
+                if (type == "MESSAGE")
+                {
+                    return logItemInfo;
+                }
+                return $"{Method}\r\n{Headers}\r\n{Body}";
+            }
             set
             {
-                SeperateProtocolElements(value);
-                switch (this.type)
+                if (type == "MESSAGE")
                 {
-                    case MESSAGE:
-                        this.logItemInfo = value;
-                        break;
-                    case REQUEST:
-                        this.logItemInfo = $"{this.method}\r\n";
-                        getHeadersString();
-                        this.logItemInfo += this.body;
-                        break;
-                    case RESPONSE:
-                        this.logItemInfo = $"{this.method}\r\n";
-                        getHeadersString();
-                        this.logItemInfo += this.body;
-                        break;
-                    default:
-                        break;
+                    this.logItemInfo = value;
+                }
+                else
+                {
+                    SeperateProtocolElements(value);
                 }
                 this.NotifyPropertyChanged("logItemInfo");
             }
         }
 
-        private void getHeadersString()
-        {
-            if (this.settings.LogRequestHeaders) 
-            {
-                foreach (KeyValuePair<string, string> entry in headers)
-                {
-                    this.logItemInfo += $"{entry.Key + entry.Value}\r\n";
-                    // do something with entry.Value or entry.Key
-                }
-            }
-            
-        }
 
         // Get the method/headers and body and save them seperately for later use
         private void SeperateProtocolElements(string value)

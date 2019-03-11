@@ -6,16 +6,16 @@ namespace ProxyClasses
 {
     public class Cacher
     {
-        Dictionary<string, HttpRequest> knowRequests = new Dictionary<string, HttpRequest>();
+        Dictionary<string, string> knowRequests = new Dictionary<string, string>();
         public Cacher()
         {
 
         }
-        public void addRequest(string request, HttpRequest response)
+        public void addRequest(string request, string response)
         {
             knowRequests.Add(request, response);
         }
-        public HttpRequest GetKnownResponse(string request)
+        public string GetKnownResponse(string request)
         {
             return knowRequests[request];
         }

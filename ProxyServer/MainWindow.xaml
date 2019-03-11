@@ -28,20 +28,14 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="auto"/>
-                                <RowDefinition Height="*" />
-                                <RowDefinition Height="*" />
+                                <RowDefinition Height="auto"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
-                                <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
 
-                            <Label Grid.Row="0" Grid.Column="0" Content="Method"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Method}"/>
-                            <Label Grid.Row="1" Grid.Column="0" Content="Headers:"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Headers}"/>
-                            <Label Grid.Row="2" Grid.Column="0" Content="Body:"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Body}"/>
+                            <Label Grid.Row="0" Grid.Column="0" Content="{Binding Type}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding LogItemInfo}"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
