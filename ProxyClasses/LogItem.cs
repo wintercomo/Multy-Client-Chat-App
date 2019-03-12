@@ -42,15 +42,17 @@ namespace ProxyClasses
         {
             get
             {
-                if (!settings.LogRequestHeaders)
-                {
-                    return "";
-                }
                 string sm = "";
                 foreach (KeyValuePair<string, string> entry in headers)
                 {
-                    sm += $"{entry.Key+ entry.Value}\r\n";
-                    // do something with entry.Value or entry.Key
+                    if (entry.Key == "User-Agent" && !settings.LogCLientInfo)
+                    {
+                        // dont collect the host header if settings say so
+                    }
+                    else
+                    {
+                        sm += $"{entry.Key+ entry.Value}\r\n";
+                    }
                 }
                 return sm; 
             }
@@ -58,6 +60,14 @@ namespace ProxyClasses
         public string Body
         {
             get { return this.body; }
+        }
+        public string HttpString
+        {
+            get
+            {
+                headers["Accept-Encoding"] = ": *";
+                return $"{Method}\r\n{Headers}\r\n{Body}";
+            }
         }
         //TODO edit this function so the type is used to display different data
         public string LogItemInfo
@@ -67,18 +77,17 @@ namespace ProxyClasses
                 {
                     return logItemInfo;
                 }
-                return $"{Method}\r\n{Headers}\r\n{Body}";
+                headers["Accept-Encoding"] = ": *";
+                if (settings.LogRequestHeaders)
+                {
+                    return $"{Method}\r\n{Headers}\r\n{Body}";
+                }
+                    return $"{Method}\r\n{Body}";
             }
             set
             {
-                if (type == "MESSAGE")
-                {
-                    this.logItemInfo = value;
-                }
-                else
-                {
-                    SeperateProtocolElements(value);
-                }
+                SeperateProtocolElements(value);
+                this.logItemInfo = value;
                 this.NotifyPropertyChanged("logItemInfo");
             }
         }
@@ -87,6 +96,7 @@ namespace ProxyClasses
         // Get the method/headers and body and save them seperately for later use
         private void SeperateProtocolElements(string value)
         {
+            bool reachedBody = false;
             string[] result = Regex.Split(value, "\r\n|\r|\n");
             for (int i = 0; i < result.Length; i++)
             {
@@ -94,25 +104,35 @@ namespace ProxyClasses
                 {
                     this.method = result[i];
                 }
-                else if (settings.LogRequestHeaders && i > 0 && i != result.Length - 1)
+                else if (i > 0 && !reachedBody)
                 {
-                    GetHeaders(result, i);
+                    if (result[i] == "")
+                    {
+                        reachedBody = true;
+                    }
+                    else
+                    {
+                        GetHeader(result, i);
+                    }
                 }
                 else
                 {
-                    this.body = result[i];
+                    this.body += result[i];
                 }
             }
         }
 
-        private void GetHeaders(string[] result, int i)
+        private void GetHeader(string[] result, int i)
         {
             int index = result[i].IndexOf(':');
             if (index != -1)
             {
                 string headerType = result[i].Substring(0, index);
                 string header = result[i].Substring(index);
-                headers.Add(headerType, header);
+                if (!headers.ContainsKey(headerType))
+                {
+                    headers.Add(headerType, header);
+                }
             }
         }
 

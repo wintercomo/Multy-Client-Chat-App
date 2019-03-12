@@ -68,7 +68,10 @@ namespace ProxyServer
                     return;
                 }
                 tcpListner = new TcpListener(IPAddress.Any, settings.Port);
-                await TryStartingServer();
+                tcpListner.Start();
+                UpdateUIWithLogItem(new LogItem(LogItem.MESSAGE, settings) { LogItemInfo = "Listening for HTTP REQUEST" });
+                settings.ServerRunning = true;
+                await ListenForHttpRequest();
                 return;
             }
             catch (HttpListenerException)
@@ -83,44 +86,36 @@ namespace ProxyServer
             {
                 UpdateUIWithLogItem(new LogItem(LogItem.MESSAGE, settings) { LogItemInfo = "Cannot parse host IP: \r\n " + err.Message });
             }
+            catch (ArgumentException err)
+            {
+                UpdateUIWithLogItem(new LogItem(LogItem.MESSAGE, settings) { LogItemInfo = "Argument Exception!: \r\n " + err.Message });
+            } 
             finally
             {
                 StopProxyServer();
             }
         }
 
-        private async Task TryStartingServer()
+        private async Task ListenForHttpRequest()
         {
-            try
+            while (true)
             {
-                tcpListner.Start();
-                UpdateUIWithLogItem(new LogItem(LogItem.MESSAGE, settings) { LogItemInfo = "Listening for HTTP REQUEST" });
-                settings.ServerRunning = true;
-                while (true)
+                //Wait for a client aka a request
+                tcpClient = await tcpListner.AcceptTcpClientAsync();
+                clientStream = tcpClient.GetStream();
+                string requestInfo = await chatApp.CreateMessageFromReading(clientStream, settings.BufferSize);
+                // firefox spam requests
+                if (!requestInfo.Contains("detectportal"))
                 {
-                    //Wait for a client aka a request
-                    tcpClient = await tcpListner.AcceptTcpClientAsync();
-                    clientStream = tcpClient.GetStream();
-                    string requestInfo = await chatApp.CreateMessageFromReading(clientStream, settings.BufferSize);
-                    // firefox spam requests
-                    if (!requestInfo.Contains("detectportal") || !requestInfo.Contains("CONNECT"))
+                    clientRequest = new LogItem(LogItem.REQUEST, settings) { LogItemInfo = requestInfo };
+                    if (settings.LogContentIn)
                     {
-                        clientRequest = new LogItem(LogItem.REQUEST, settings) { LogItemInfo = requestInfo };
-                        if (settings.LogContentIn)
-                        {
-                            UpdateUIWithLogItem(clientRequest);
-                        }
-                        await HandleHttpRequest(requestInfo);
-                        clientStream.Close();
+                        UpdateUIWithLogItem(clientRequest);
                     }
+                    await HandleHttpRequest(clientRequest.HttpString);
+                    clientStream.Close();
                 }
             }
-            catch (Exception)
-            {
-
-                throw;
-            }
-            
         }
 
         private async Task HandleHttpRequest(string httpRequestString)

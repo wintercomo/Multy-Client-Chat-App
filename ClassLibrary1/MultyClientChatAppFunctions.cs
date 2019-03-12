@@ -15,21 +15,9 @@ namespace ClassLibrary1
             byte[] buffer = new byte[bufferSize];
             do
             {
-                int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
-                responseData.AppendFormat("{0}", Encoding.ASCII.GetString(buffer, 0, readBytes));
-            } while (networkStream.DataAvailable);
-            return responseData.ToString();
-        }
-
-        public async Task<string> tester(NetworkStream networkStream, Int32 bufferSize = 1024, NetworkStream clientStream = null)
-        {
-            StringBuilder responseData = new StringBuilder();
-            byte[] buffer = new byte[bufferSize];
-            do
-            {
-                int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
-                await clientStream.WriteAsync(buffer, 0, readBytes);
-                responseData.AppendFormat("{0}", Encoding.ASCII.GetString(buffer, 0, readBytes));
+                int readBytes = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                Console.WriteLine("RECIEVWED " + ASCIIEncoding.ASCII.GetString(buffer, 0, readBytes));
+                responseData.AppendFormat("{0}", ASCIIEncoding.ASCII.GetString(buffer, 0, readBytes));
             } while (networkStream.DataAvailable);
             return responseData.ToString();
         }
