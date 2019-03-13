@@ -28,13 +28,11 @@ namespace ProxyServer
         TcpClient tcpClient;
         ProxySettings settings;
         HttpRequest clientRequest;
-        HttpRequest proxyRequest;
         HttpRequest serverResponse;
 
         public ProxyserverWindow()
         {
             InitializeComponent();
-            // Bind the new data source to the myText TextBlock control's Text dependency property.
             settings = new ProxySettings {
                 Port = 8090, CacheTimeout= 60000, BufferSize=2,
                 CheckModifiedContent =true, ContentFilterOn=true,
@@ -44,6 +42,7 @@ namespace ProxyServer
                 ServerRunning=false
             };
             this.color.Background = Brushes.Red;
+            // REPLACE THIS WITH PAGE.RECOURSE X:KEY = path
             this.DataContext = settings;
             UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) {
                 LogItemInfo = "Log van:\r\n" +
@@ -102,10 +101,11 @@ namespace ProxyServer
         {
             while (true)
             {
-                //Wait for a client aka a request
                 tcpClient = await tcpListner.AcceptTcpClientAsync();
                 clientStream = tcpClient.GetStream();
-                string requestInfo = await streamReader.CreateMessageFromReading(clientStream, settings.BufferSize);
+                byte[] messageBytes = await streamReader.GetBytesFromReading(settings.BufferSize, clientStream);
+                string requestInfo = Encoding.ASCII.GetString(messageBytes, 0, messageBytes.Length);
+
                 // firefox spam requests
                 if (!requestInfo.Contains("detectportal"))
                 {
@@ -126,19 +126,22 @@ namespace ProxyServer
             // if request is known. Send the known response back
             if (cacher.RequestKnown(clientRequest.Method))
             {
-                string knownResponse = cacher.GetKnownResponse(clientRequest.Method);
+                byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method);
+                string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
                 if (settings.LogContentOut)
                 {
                     UpdateUIWithLogItem(serverResponse);
                 }
-                byte[] messageInBytes = Encoding.ASCII.GetBytes(knownResponse.ToString());
-                await clientStream.WriteAsync(messageInBytes, 0, messageInBytes.Length);
+                await clientStream.WriteAsync(knownResponseBytes, 0, knownResponseBytes.Length);
                 return;
             }
             // Get the actual response
-            string responseData = await streamReader.HttpRequestAsync(httpRequestString, clientStream);
-            serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseData };
+            //string responseData = streamReader.HttpRequestAsync(httpRequestString, clientStream);
+            byte[] responseData = await streamReader.DoProxyRequest(clientRequest,  settings.BufferSize);
+            await clientStream.WriteAsync(responseData, 0, responseData.Length);
+            string responseString = Encoding.ASCII.GetString(responseData, 0, responseData.Length);
+            serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
             if (settings.LogContentIn)
             {
                 UpdateUIWithLogItem(serverResponse);
@@ -148,6 +151,7 @@ namespace ProxyServer
 
         private void StopProxyServer()
         {
+            if (tcpListner != null)
             UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Stopping proxy Server..." });
             tcpListner.Stop();
             settings.ServerRunning = false;

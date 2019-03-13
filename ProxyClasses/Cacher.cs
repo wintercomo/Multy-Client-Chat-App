@@ -6,12 +6,12 @@ namespace ProxyClasses
 {
     public class Cacher
     {
-        Dictionary<string, string> knowRequests = new Dictionary<string, string>();
-        public void addRequest(string request, string response)
+        Dictionary<string, byte[]> knowRequests = new Dictionary<string, byte[]>();
+        public void addRequest(string request, byte[] response)
         {
             knowRequests.Add(request, response);
         }
-        public string GetKnownResponse(string request)
+        public byte[] GetKnownResponse(string request)
         {
             return knowRequests[request];
         }

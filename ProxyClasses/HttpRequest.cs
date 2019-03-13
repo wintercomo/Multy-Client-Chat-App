@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace ProxyClasses
 {
-    public class HttpRequest : INotifyPropertyChanged
+    public class HttpRequest : BindableBase
     {
         public const string REQUEST = "REQUEST";
         public const string PROXY_REQUEST = "PROXY REQUEST";
@@ -51,7 +51,7 @@ namespace ProxyClasses
                     }
                     else
                     {
-                        sm += $"{entry.Key+ entry.Value}\r\n";
+                        sm += $"{entry.Key}:{entry.Value}\r\n";
                     }
                 }
                 return sm; 
@@ -66,7 +66,7 @@ namespace ProxyClasses
             get
             {
                 //UpdateHeader("Accept-Encoding", ": *");
-                UpdateHeader("Connection", ": Close");
+                UpdateHeader("Connection", " Close");
                 if (settings.AllowChangeHeaders)
                 {
                     // Remove server and user headers (From assigment discription)
@@ -103,9 +103,12 @@ namespace ProxyClasses
             }
             set
             {
-                SeperateProtocolElements(value);
-                this.logItemInfo = value;
-                this.NotifyPropertyChanged("logItemInfo");
+                if (SetProperty<string>(ref logItemInfo, value))
+                {
+                    SeperateProtocolElements(value);
+                    this.logItemInfo = value;
+                }
+                
             }
         }
 
@@ -146,24 +149,22 @@ namespace ProxyClasses
             }
             headers.Add(headerType, header);
         }
-
+        public string GetHeader(string headerType)
+        {
+            if (headers.ContainsKey(headerType))
+            {
+                return headers[headerType];
+            }return "";
+        }
         private void SaveHeader(string[] result, int i)
         {
             int index = result[i].IndexOf(':');
             if (index != -1)
             {
                 string headerType = result[i].Substring(0, index);
-                string header = result[i].Substring(index);
+                string header = result[i].Substring(index + 2); // + 2 to remove the : and space
                 UpdateHeader(headerType, header);
             }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void NotifyPropertyChanged(string propName)
-        {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propName));
         }
     }
 }

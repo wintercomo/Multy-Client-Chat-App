@@ -4,7 +4,6 @@ C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.csprojAssemblyReference.cache
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\App.g.cs
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer_MarkupCompile.cache
-C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer_MarkupCompile.lref
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.g.resources
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.Properties.Resources.resources
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.csproj.GenerateResource.cache

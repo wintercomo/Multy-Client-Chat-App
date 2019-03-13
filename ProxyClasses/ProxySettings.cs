@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProxyClasses;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace ProxyServer
 {
-    public class ProxySettings : INotifyPropertyChanged
+    public class ProxySettings : BindableBase
     {
-        private Int32 portValue;
-        private Int32 cacheTimeoutValue;
-        private Int32 bufferSizeValue;
+        private Int32 port;
+        private Int32 cacheTimeout;
+        private Int32 bufferSize;
         private Boolean checkModifiedContent;
         private Boolean contentFilterOn;
         private Boolean basicAuthOn;
@@ -22,49 +23,36 @@ namespace ProxyServer
         private Boolean logCLientInfo;
         private Boolean serverRunning;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public void NotifyPropertyChanged(string propName)
-        {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propName));
-        }
         public Int32 Port
         {
-            get { return portValue; }
+            get { return port; }
             set
             {
-                if (value != portValue)
+                if (SetProperty<int>(ref port, value))
                 {
-                    portValue = value;
-                    this.NotifyPropertyChanged("portValue");
-
+                    this.port = value;
                 }
             }
         }
         public Int32 CacheTimeout
         {
-            get { return cacheTimeoutValue; }
+            get { return cacheTimeout; }
             set
             {
-                if (value != cacheTimeoutValue)
+                if (SetProperty<int>(ref cacheTimeout, value))
                 {
-                    cacheTimeoutValue = value;
-                    this.NotifyPropertyChanged("cacheTimeoutValue");
-
+                    this.cacheTimeout = value;
                 }
             }
         }
         public Int32 BufferSize
         {
-            get { return bufferSizeValue; }
+            get { return bufferSize; }
             set
             {
-                if (value != bufferSizeValue)
+                if (SetProperty<int>(ref bufferSize, value))
                 {
-                    bufferSizeValue = value;
-                    this.NotifyPropertyChanged("bufferSizeValue");
-
+                    this.bufferSize = value;
                 }
             }
         }
@@ -73,11 +61,9 @@ namespace ProxyServer
             get { return checkModifiedContent; }
             set
             {
-                if (value != checkModifiedContent)
+                if (SetProperty<bool>(ref checkModifiedContent, value))
                 {
-                    checkModifiedContent = value;
-                    this.NotifyPropertyChanged("checkModifiedContent");
-
+                    this.checkModifiedContent = value;
                 }
             }
         }
@@ -86,11 +72,9 @@ namespace ProxyServer
             get { return contentFilterOn; }
             set
             {
-                if (value != contentFilterOn)
+                if (SetProperty<bool>(ref contentFilterOn, value))
                 {
-                    contentFilterOn = value;
-                    this.NotifyPropertyChanged("contentFilterOn");
-
+                    this.contentFilterOn = value;
                 }
             }
         }
@@ -99,11 +83,9 @@ namespace ProxyServer
             get { return basicAuthOn; }
             set
             {
-                if (value != basicAuthOn)
+                if (SetProperty<bool>(ref basicAuthOn, value))
                 {
-                    basicAuthOn = value;
-                    this.NotifyPropertyChanged("basicAuthOn");
-
+                    this.basicAuthOn = value;
                 }
             }
         }
@@ -112,11 +94,9 @@ namespace ProxyServer
             get { return allowChangeHeaders; }
             set
             {
-                if (value != allowChangeHeaders)
+                if (SetProperty<bool>(ref allowChangeHeaders, value))
                 {
-                    allowChangeHeaders = value;
-                    this.NotifyPropertyChanged("allowChangeHeaders");
-
+                    this.allowChangeHeaders = value;
                 }
             }
         }
@@ -126,11 +106,9 @@ namespace ProxyServer
             get { return logRequestHeaders; }
             set
             {
-                if (value != logRequestHeaders)
+                if (SetProperty<bool>(ref logRequestHeaders, value))
                 {
-                    logRequestHeaders = value;
-                    this.NotifyPropertyChanged("logRequestHeaders");
-
+                    this.logRequestHeaders = value;
                 }
             }
         }
@@ -139,11 +117,9 @@ namespace ProxyServer
             get { return logContentIn; }
             set
             {
-                if (value != logContentIn)
+                if (SetProperty<bool>(ref logContentIn, value))
                 {
-                    logContentIn = value;
-                    this.NotifyPropertyChanged("logContentIn");
-
+                    this.logContentIn = value;
                 }
             }
         }
@@ -152,11 +128,9 @@ namespace ProxyServer
             get { return logContentOut; }
             set
             {
-                if (value != logContentOut)
+                if (SetProperty<bool>(ref logContentOut, value))
                 {
-                    logContentOut = value;
-                    this.NotifyPropertyChanged("logContentOut");
-
+                    this.logContentOut = value;
                 }
             }
         }
@@ -165,11 +139,9 @@ namespace ProxyServer
             get { return logCLientInfo; }
             set
             {
-                if (value != logCLientInfo)
+                if (SetProperty<bool>(ref logCLientInfo, value))
                 {
-                    logCLientInfo = value;
-                    this.NotifyPropertyChanged("logCLientInfo");
-
+                    this.logCLientInfo = value;
                 }
             }
         }
@@ -178,11 +150,9 @@ namespace ProxyServer
             get { return serverRunning; }
             set
             {
-                if (value != serverRunning)
+                if (SetProperty<bool>(ref serverRunning, value))
                 {
-                    serverRunning = value;
-                    this.NotifyPropertyChanged("ServerRunning");
-
+                    this.serverRunning = value;
                 }
             }
         }
