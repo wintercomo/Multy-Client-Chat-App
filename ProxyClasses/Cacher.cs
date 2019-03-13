@@ -7,10 +7,6 @@ namespace ProxyClasses
     public class Cacher
     {
         Dictionary<string, string> knowRequests = new Dictionary<string, string>();
-        public Cacher()
-        {
-
-        }
         public void addRequest(string request, string response)
         {
             knowRequests.Add(request, response);

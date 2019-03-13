@@ -16,23 +16,21 @@ namespace ClassLibrary1
             do
             {
                 int readBytes = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                Console.WriteLine("RECIEVWED " + ASCIIEncoding.ASCII.GetString(buffer, 0, readBytes));
                 responseData.AppendFormat("{0}", ASCIIEncoding.ASCII.GetString(buffer, 0, readBytes));
             } while (networkStream.DataAvailable);
             return responseData.ToString();
         }
 
-        public async Task<string> CreateMessageForWriting(NetworkStream networkStream, Int32 bufferSize = 1024)
+        public async Task<int> getMessageBytes(NetworkStream networkStream, Int32 bufferSize = 1024)
         {
-            StringBuilder responseData = new StringBuilder();
-            Console.WriteLine($"RECIEVE MESSAGE: Buffer size : {bufferSize}");
             byte[] buffer = new byte[bufferSize];
+            int readBytes = 0;
             do
             {
-                int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
-                responseData.AppendFormat("{0}", Encoding.ASCII.GetString(buffer, 0, readBytes));
+                 readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
+
             } while (networkStream.DataAvailable);
-            return responseData.ToString();
+            return readBytes;
         }
     }
 }

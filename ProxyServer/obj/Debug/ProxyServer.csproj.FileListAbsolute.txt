@@ -2,11 +2,9 @@ C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\ProxyServer.exe
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\ProxyServer.pdb
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.csprojAssemblyReference.cache
-C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\MainWindow.g.cs
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\App.g.cs
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer_MarkupCompile.cache
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer_MarkupCompile.lref
-C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\MainWindow.baml
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.g.resources
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.Properties.Resources.resources
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.csproj.GenerateResource.cache
@@ -18,3 +16,5 @@ C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServer.csproj.CopyComplete
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\ProxyClasses.dll
 C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\bin\Debug\ProxyClasses.pdb
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServerWindow.g.cs
+C:\Users\HP\Documents\NOTS\Projects\Multy-Client-Chat-App\ProxyServer\obj\Debug\ProxyServerWindow.baml

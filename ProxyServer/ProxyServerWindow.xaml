@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProxyServer"
         mc:Ignorable="d"
-        Title="MainWindow" MinHeight="400" MinWidth="800" Height="450" Width="800">
+        Title="ProxyServer" MinHeight="400" MinWidth="800" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="50" Width="377*" />
@@ -87,10 +87,10 @@
             <TextBox x:Name="txtPort" Grid.Row="1" Grid.Column="1" Text ="{Binding Port, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
             <TextBox x:Name="txtCacheTimeout" Grid.Row="2" Grid.Column="1"  Text="{Binding CacheTimeout, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5"/>
             <TextBox x:Name="txtBufferSize" Grid.Row="3" Grid.Column="1" Text="{Binding BufferSize, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,4"/>
-            <CheckBox x:Name="checkBoxContentFilter" IsChecked="{Binding ContentFilterOn, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <CheckBox x:Name="checkBoxChangeHeaders" IsChecked="{Binding AllowChangeHeaders, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <CheckBox x:Name="checkBoxBasicAuth" IsChecked="{Binding BasicAuthOn, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
-            <CheckBox Grid.Row="7" Grid.Column="1" x:Name="checkBoxCheckModifiedContent" IsChecked="{Binding CheckModifiedContent, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}"  Margin="5"/>
+            <CheckBox x:Name="checkBoxContentFilter" IsChecked="{Binding CheckModifiedContent, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox x:Name="checkBoxChangeHeaders" IsChecked="{Binding ContentFilterOn, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox x:Name="checkBoxBasicAuth" IsChecked="{Binding AllowChangeHeaders, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
+            <CheckBox Grid.Row="7" Grid.Column="1" x:Name="checkBoxCheckModifiedContent" IsChecked="{Binding BasicAuthOn, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}"  Margin="5"/>
             <CheckBox x:Name="checkBoxLogRequestHeaders" IsChecked="{Binding LogRequestHeaders, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="8" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
             <CheckBox x:Name="checkBoxLogContentIN" IsChecked="{Binding LogContentIn, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="9" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
             <CheckBox x:Name="checkBoxLogContentOut" IsChecked="{Binding LogContentOut, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="10" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
@@ -105,9 +105,13 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Content="Server Running:"/>
             <Label x:Name="button" Grid.Row="0" Grid.Column="1" Content="{Binding ServerRunning, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
+            <Label x:Name="contentModifiedLabel" Grid.Row="0" Grid.Column="2" Content="Content Modified: " VerticalAlignment="Top"/>
+            <TextBox x:Name="color" Grid.Row="0" Grid.Column="3" VerticalAlignment="Top" IsEnabled="False" Margin="0,0,0,-3"/>
         </Grid>
 
 
