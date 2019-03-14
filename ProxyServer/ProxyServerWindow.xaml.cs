@@ -90,6 +90,10 @@ namespace ProxyServer
             catch (ArgumentException err)
             {
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Argument Exception!: \r\n " + err.Message });
+            }
+            catch (SocketException err)
+            {
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Refused connection! Error log: \r\n " + err.Message });
             } 
             finally
             {
@@ -128,6 +132,13 @@ namespace ProxyServer
         {
             if (cacher.RequestKnown(clientRequest.Method))
             {
+                bool contentModified = cacher.ContentModified(cacher.GetKnownResponse(clientRequest.Method), settings.CacheTimeout);
+                if (settings.CheckModifiedContent && contentModified)
+                {
+                    cacher.RemoveItem(clientRequest.Method);
+                    await HandleProxyRequest();
+                    return;
+                }
                 byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method).RequestBytes;
                 await clientStream.WriteAsync(knownResponseBytes, 0, knownResponseBytes.Length);
                 string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
@@ -139,7 +150,13 @@ namespace ProxyServer
                 return;
             }
             // Get the actual response
-            byte[] responseData = await streamReader.DoProxyRequest(clientRequest, clientStream,  settings.BufferSize);
+            await HandleProxyRequest();
+            // if request is known. Send the known response back
+        }
+
+        private async Task HandleProxyRequest()
+        {
+            byte[] responseData = await streamReader.DoProxyRequest(clientRequest, clientStream, settings.BufferSize);
             string responseString = Encoding.ASCII.GetString(responseData, 0, responseData.Length);
             serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
             if (settings.LogContentIn)
@@ -147,7 +164,6 @@ namespace ProxyServer
                 UpdateUIWithLogItem(serverResponse);
             }
             cacher.addRequest(clientRequest.Method, responseData);
-            // if request is known. Send the known response back
         }
 
         private void StopProxyServer()
