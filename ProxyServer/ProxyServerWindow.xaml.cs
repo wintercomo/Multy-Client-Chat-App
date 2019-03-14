@@ -118,8 +118,8 @@ namespace ProxyServer
                         UpdateUIWithLogItem(clientRequest);
                     }
                     await HandleHttpRequest();
-                    tcpClient.Dispose();
                     clientStream.Dispose();
+                    tcpClient.Dispose();
                 }
             }
         }
@@ -128,14 +128,14 @@ namespace ProxyServer
         {
             if (cacher.RequestKnown(clientRequest.Method))
             {
-                byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method);
+                byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method).RequestBytes;
+                await clientStream.WriteAsync(knownResponseBytes, 0, knownResponseBytes.Length);
                 string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
                 if (settings.LogContentOut)
                 {
                     UpdateUIWithLogItem(serverResponse);
                 }
-                await clientStream.WriteAsync(knownResponseBytes, 0, knownResponseBytes.Length);
                 return;
             }
             // Get the actual response
