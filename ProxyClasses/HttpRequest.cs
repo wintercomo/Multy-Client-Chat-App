@@ -47,7 +47,7 @@ namespace ProxyClasses
                 {
                     if (entry.Key == "User-Agent" && !settings.LogCLientInfo)
                     {
-                        // dont collect the host header if settings say so
+                        // dont show the host header if settings say so
                     }
                     else
                     {
@@ -66,7 +66,8 @@ namespace ProxyClasses
             get
             {
                 //UpdateHeader("Accept-Encoding", ": *");
-                UpdateHeader("Connection", " Close");
+                //UpdateHeader("Connection", " Close");
+                //UpdateHeader("Username/Password", " admin/admin");
                 if (settings.AllowChangeHeaders)
                 {
                     // Remove server and user headers (From assigment discription)

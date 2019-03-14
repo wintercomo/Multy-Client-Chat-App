@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -13,6 +14,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using StreamReader = ProxyClasses.StreamReader;
 
 namespace ProxyServer
 {
@@ -71,7 +73,6 @@ namespace ProxyServer
                     StopProxyServer();
                     return;
                 }
-                
                 await ListenForHttpRequest();
                 return;
             }
@@ -91,13 +92,13 @@ namespace ProxyServer
             {
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Argument Exception!: \r\n " + err.Message });
             }
-            catch (SocketException err)
+            catch (IOException err)
             {
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Refused connection! Error log: \r\n " + err.Message });
-            } 
+            }
             finally
             {
-                StopProxyServer();
+
             }
         }
 
@@ -122,14 +123,38 @@ namespace ProxyServer
                         UpdateUIWithLogItem(clientRequest);
                     }
                     await HandleHttpRequest();
-                    clientStream.Dispose();
-                    tcpClient.Dispose();
                 }
+                clientStream.Dispose();
+                tcpClient.Dispose();
             }
         }
-
+        private async Task<bool> DoBasicAuth()
+        {
+            string authHeader = clientRequest.GetHeader("Authorization");
+            if (authHeader == "")
+            {
+                await SendUnAutherizedResponse();
+                return false;
+            }
+            string encodedUsernamePassword = authHeader.Substring("Basic ".Length).Trim();
+            Encoding encoding = Encoding.GetEncoding("iso-8859-1");
+            string usernamePassword = encoding.GetString(Convert.FromBase64String(encodedUsernamePassword));
+            Console.WriteLine(usernamePassword);
+            if (usernamePassword != "admin:admin")
+            {
+                await SendUnAutherizedResponse();
+                return false;
+            }
+            return true;
+        }
         private async Task HandleHttpRequest()
         {
+            //check user info if settings say so
+            if (settings.BasicAuthOn)
+            {
+                //jump out if Auth failed
+                if (!await DoBasicAuth()) return;
+            }
             if (cacher.RequestKnown(clientRequest.Method))
             {
                 bool contentModified = cacher.ContentModified(cacher.GetKnownResponse(clientRequest.Method), settings.CacheTimeout);
@@ -152,6 +177,17 @@ namespace ProxyServer
             // Get the actual response
             await HandleProxyRequest();
             // if request is known. Send the known response back
+        }
+
+        private async Task SendUnAutherizedResponse()
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine("HTTP/1.1 401 Unauthorized");
+            builder.AppendLine($"Date: {DateTime.Now}");
+            builder.AppendLine();
+            byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
+            await clientStream.WriteAsync(badRequestResponse, 0, badRequestResponse.Length);
+            UpdateUIWithLogItem(new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() });
         }
 
         private async Task HandleProxyRequest()
