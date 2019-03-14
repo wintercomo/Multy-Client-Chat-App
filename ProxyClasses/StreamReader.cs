@@ -23,88 +23,10 @@ namespace ProxyClasses
                 return "";
             }
         }
-        public async Task<string> HttpRequestAsync(string httpRequest, NetworkStream clientStream)
+        public async Task<byte[]> DoProxyRequest(HttpRequest httpRequest,NetworkStream clientStream, Int32 bufferSize = 1024)
         {
-            string result = string.Empty;
-            string hostString = getBetween(httpRequest, "http://", "/");
-            Uri baseUri = new Uri("http://" + hostString);
-            TcpClient tcp = new TcpClient(baseUri.Host, baseUri.Port);
-            var stream = tcp.GetStream();
-            tcp.SendTimeout = 500;
-            tcp.ReceiveTimeout = 1000;
-            // Send request headers
-            var builder = new StringBuilder();
-            builder.AppendLine(httpRequest);
-            builder.AppendLine();
-            var header = Encoding.ASCII.GetBytes(builder.ToString());
-            await stream.WriteAsync(header, 0, header.Length);
-
-            // receive data
-            var memory = new MemoryStream();
-            await stream.CopyToAsync(memory);
-            memory.Position = 0;
-            var data = memory.ToArray();
-
-            var index = BinaryMatch(data, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
-            var headers = Encoding.ASCII.GetString(data, 0, index);
-            memory.Position = index;
-
-            if (headers.IndexOf("Content-Encoding: gzip") > 0)
+            while (true)
             {
-                using (GZipStream decompressionStream = new GZipStream(memory, CompressionMode.Decompress))
-                using (var decompressedMemory = new MemoryStream())
-                {
-                    await decompressionStream.CopyToAsync(decompressedMemory);
-                    decompressedMemory.Position = 0;
-                    result = Encoding.UTF8.GetString(decompressedMemory.ToArray());
-                }
-            }
-            else
-            {
-                await clientStream.WriteAsync(data, index, data.Length - index);
-                result = headers + Encoding.UTF8.GetString(data, index, data.Length - index);
-                //result = Encoding.GetEncoding("gbk").GetString(data, index, data.Length - index);
-            }
-
-            //Debug.WriteLine(result);
-            return result;
-        }
-
-        private static int BinaryMatch(byte[] input, byte[] pattern)
-        {
-            int sLen = input.Length - pattern.Length + 1;
-            for (int i = 0; i < sLen; ++i)
-            {
-                bool match = true;
-                for (int j = 0; j < pattern.Length; ++j)
-                {
-                    if (input[i + j] != pattern[j])
-                    {
-                        match = false;
-                        break;
-                    }
-                }
-                if (match)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
-        public async Task<string> CreateMessageFromReading(NetworkStream networkStream, Int32 bufferSize = 1024)
-        {
-            StringBuilder responseData = new StringBuilder();
-            byte[] buffer = new byte[bufferSize];
-            do
-            {
-                int readBytes = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                responseData.AppendFormat("{0}", ASCIIEncoding.ASCII.GetString(buffer, 0, readBytes));
-            } while (networkStream.DataAvailable);
-            return responseData.ToString();
-        }
-       
-        public async Task<byte[]> DoProxyRequest(HttpRequest httpRequest, Int32 bufferSize = 1024)
-        {
             string httpRequestString = httpRequest.HttpString;
             string hostString = httpRequest.GetHeader("Host");
             Uri baseUri = new Uri("http://" + hostString);
@@ -112,10 +34,26 @@ namespace ProxyClasses
             var stream = tcp.GetStream();
             var header = Encoding.ASCII.GetBytes(httpRequestString);
             await stream.WriteAsync(header, 0, header.Length);
-            var data = await GetBytesFromReading(bufferSize, stream);
-            return data;
+            //this freezes the UI. NEED FIX!
+            byte[] buffer = new byte[bufferSize];
+            var memory = new MemoryStream();
+            do
+            {
+                int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
+                await clientStream.WriteAsync(buffer, 0, readBytes);
+                await memory.WriteAsync(buffer, 0, readBytes);
+            } while (stream.DataAvailable);
+                tcp.Dispose();
+                stream.Dispose();
+            return memory.ToArray();
+
+            }
         }
 
+        public async Task SendBytesToStream(byte[] message, NetworkStream stream)
+        {
+            await stream.WriteAsync(message,0, message.Length);
+        }
         public async Task<byte[]> GetBytesFromReading(int bufferSize, NetworkStream stream)
         {
             byte[] buffer = new byte[bufferSize];
@@ -124,7 +62,6 @@ namespace ProxyClasses
             {
                 int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
                 await memory.WriteAsync(buffer, 0, readBytes);
-
             } while (stream.DataAvailable);
             return memory.ToArray();
         }

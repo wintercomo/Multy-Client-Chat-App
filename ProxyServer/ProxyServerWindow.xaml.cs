@@ -1,6 +1,7 @@
 ﻿using ClassLibrary1;
 using ProxyClasses;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net;
@@ -29,12 +30,14 @@ namespace ProxyServer
         ProxySettings settings;
         HttpRequest clientRequest;
         HttpRequest serverResponse;
+        //create a client
+                   
 
         public ProxyserverWindow()
         {
             InitializeComponent();
             settings = new ProxySettings {
-                Port = 8090, CacheTimeout= 60000, BufferSize=2,
+                Port = 8090, CacheTimeout= 60000, BufferSize=200,
                 CheckModifiedContent =true, ContentFilterOn=true,
                 BasicAuthOn = false, AllowChangeHeaders= true,
                 LogRequestHeaders = false, LogContentIn= true,
@@ -68,10 +71,7 @@ namespace ProxyServer
                     StopProxyServer();
                     return;
                 }
-                tcpListner = new TcpListener(IPAddress.Any, settings.Port);
-                tcpListner.Start();
-                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Listening for HTTP REQUEST" });
-                settings.ServerRunning = true;
+                
                 await ListenForHttpRequest();
                 return;
             }
@@ -99,13 +99,16 @@ namespace ProxyServer
 
         private async Task ListenForHttpRequest()
         {
+            tcpListner = new TcpListener(IPAddress.Any, settings.Port);
+            tcpListner.Start();
+            UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Listening for HTTP REQUEST" });
+            settings.ServerRunning = true;
             while (true)
             {
                 tcpClient = await tcpListner.AcceptTcpClientAsync();
                 clientStream = tcpClient.GetStream();
                 byte[] messageBytes = await streamReader.GetBytesFromReading(settings.BufferSize, clientStream);
                 string requestInfo = Encoding.ASCII.GetString(messageBytes, 0, messageBytes.Length);
-
                 // firefox spam requests
                 if (!requestInfo.Contains("detectportal"))
                 {
@@ -114,16 +117,15 @@ namespace ProxyServer
                     {
                         UpdateUIWithLogItem(clientRequest);
                     }
-                    await HandleHttpRequest(clientRequest.HttpString);
-                    clientStream.Close();
+                    await HandleHttpRequest();
+                    tcpClient.Dispose();
+                    clientStream.Dispose();
                 }
             }
         }
 
-        private async Task HandleHttpRequest(string httpRequestString)
+        private async Task HandleHttpRequest()
         {
-
-            // if request is known. Send the known response back
             if (cacher.RequestKnown(clientRequest.Method))
             {
                 byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method);
@@ -137,9 +139,7 @@ namespace ProxyServer
                 return;
             }
             // Get the actual response
-            //string responseData = streamReader.HttpRequestAsync(httpRequestString, clientStream);
-            byte[] responseData = await streamReader.DoProxyRequest(clientRequest,  settings.BufferSize);
-            await clientStream.WriteAsync(responseData, 0, responseData.Length);
+            byte[] responseData = await streamReader.DoProxyRequest(clientRequest, clientStream,  settings.BufferSize);
             string responseString = Encoding.ASCII.GetString(responseData, 0, responseData.Length);
             serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
             if (settings.LogContentIn)
@@ -147,6 +147,7 @@ namespace ProxyServer
                 UpdateUIWithLogItem(serverResponse);
             }
             cacher.addRequest(clientRequest.Method, responseData);
+            // if request is known. Send the known response back
         }
 
         private void StopProxyServer()
