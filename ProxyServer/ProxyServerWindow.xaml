@@ -3,8 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local1="clr-namespace:ProxyClasses;assembly=ProxyClasses"
+        xmlns:local11="clr-namespace:ProxyServer;assembly=ProxyClasses"
         mc:Ignorable="d"
         Title="ProxyServer" MinHeight="400" MinWidth="800" Height="450" Width="800">
+    <Window.Resources>
+        <local1:LogViewModel  x:Key="logViewModel" />
+        <local11:ProxySettingsViewModel x:Key="proxySettings"/>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="50" Width="377*" />
@@ -13,7 +19,6 @@
 
         <Grid.RowDefinitions>
             <RowDefinition MinHeight="50" Height="375*" />
-            <RowDefinition MinHeight="50" Height="44*" />
         </Grid.RowDefinitions>
 
         <Grid
@@ -21,7 +26,15 @@
             Grid.Column="0"
             Margin="10,10,20,10"
             >
-            <ListBox x:Name="logListBox">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="50" Width="377*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ListBox Grid.Row="0" x:Name="logListBox">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -39,20 +52,18 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </Grid>
-        <Grid
-            Grid.Column="0"
-            Margin="10,10,20,10" Grid.Row="1"
-            >
-            <Button Click="Button_Click">Clear Log</Button>
+            <Button Grid.Row="1" Click="Button_Click">Clear Log</Button>
         </Grid>
 
         <Grid
+            Name="settingsBlock"
             Grid.Row="0" 
             Margin="6,10,0,2" Grid.Column="1"
+            DataContext="{StaticResource proxySettings}"
             >
 
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -96,23 +107,9 @@
             <CheckBox x:Name="checkBoxLogClient" IsChecked="{Binding LogCLientInfo, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="11" Grid.Column="1" Margin="5.4,0,5.2,4.8" Height="17" VerticalAlignment="Bottom"/>
 
             <Button x:Name="btnStartStopProxy" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Content="Start / Stop proxy" Padding="5" Margin="10" Click="BtnStartStopProxy_Click"/>
+        
+            <Label Grid.Row="12" Grid.Column="0" Content="Server Running:"/>
+            <Label x:Name="button" Grid.Row="12" Grid.Column="1" Content="{Binding ServerRunning, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
         </Grid>
-        <Grid Grid.Column="1" Margin="10,10,20,10" Grid.Row="1" >
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Label Grid.Row="0" Grid.Column="0" Content="Server Running:"/>
-            <Label x:Name="button" Grid.Row="0" Grid.Column="1" Content="{Binding ServerRunning, Mode = TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top"/>
-            <Label x:Name="contentModifiedLabel" Grid.Row="0" Grid.Column="2" Content="Content Modified: " VerticalAlignment="Top"/>
-            <TextBox x:Name="color" Grid.Row="0" Grid.Column="3" VerticalAlignment="Top" IsEnabled="False" Margin="0,0,0,-3"/>
-        </Grid>
-
-
     </Grid>
 </Window>

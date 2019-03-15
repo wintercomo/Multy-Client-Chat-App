@@ -46,74 +46,80 @@ namespace ProxyClasses
         }
         public async Task<byte[]> DoProxyRequest(HttpRequest httpRequest,NetworkStream clientStream, Int32 bufferSize = 1024)
         {
-            string httpRequestString = httpRequest.HttpString;
-            string hostString = httpRequest.GetHeader("Host");
-            Uri baseUri = new Uri("http://" + hostString);
-            TcpClient tcp = new TcpClient(baseUri.Host, baseUri.Port);
-            var stream = tcp.GetStream();
-            var header = Encoding.ASCII.GetBytes(httpRequestString);
-            await stream.WriteAsync(header, 0, header.Length);
-            byte[] buffer = new byte[bufferSize];
-            MemoryStream memory = new MemoryStream();
-            NetworkStream tmpStream = tcp.GetStream();
-            await CheckResponseType(memory, tmpStream);
-            await WriteByReadingStreamAsync(clientStream, stream, buffer, memory);
-            //await stream.CopyToAsync(memory);
-            stream.Dispose();
-            tcp.Dispose();
-            return memory.ToArray();
-        }
+            try
+            {
+                string httpRequestString = httpRequest.HttpString;
+                string hostString = httpRequest.GetHeader("Host");
+                Uri baseUri = new Uri("http://" + hostString);
+                TcpClient proxyTcpClient = new TcpClient(baseUri.Host, baseUri.Port);
+                NetworkStream proxyStream = proxyTcpClient.GetStream();
+                byte[] requestInBytes = Encoding.ASCII.GetBytes(httpRequestString);
+                await proxyStream.WriteAsync(requestInBytes, 0, requestInBytes.Length);
+                byte[] buffer = new byte[bufferSize];
+                MemoryStream memory = new MemoryStream();
+                NetworkStream tmpStream = proxyTcpClient.GetStream();
+                await proxyStream.CopyToAsync(memory);
+                proxyStream.Dispose();
+                proxyTcpClient.Dispose();
+                return memory.ToArray();
+            }
+            catch(ArgumentException err)
+            {
+                throw new BadRequestException(err.Message);
+            }
+            catch (Exception)
+            {
 
-        private static async Task WriteByReadingStreamAsync(NetworkStream clientStream, NetworkStream stream, byte[] buffer, MemoryStream memory)
-        {
-            do
-            {
-                int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
-                await clientStream.WriteAsync(buffer, 0, readBytes);
-                await memory.WriteAsync(buffer, 0, readBytes);
-            } while (stream.DataAvailable);
+                throw;
+            }
         }
-        public async Task WriteMessageWithBufferAsync(NetworkStream clientStream, byte[] badRequestResponse)
+        public async Task WriteMessageWithBufferAsync(NetworkStream destinationStream, byte[] messageBytes, int buffer, bool removeImg = false)
         {
-            int index = 0;
-            int buffer = 13;
-            while (index < badRequestResponse.Length)
+            if (removeImg)
             {
-                int diff =  badRequestResponse.Length - index;
+                //BUG HERE
+                messageBytes = await ReplaceImages(messageBytes);
+            }
+            int index = 0;
+            while (index < messageBytes.Length)
+            {
+                int diff =  messageBytes.Length - index;
                 if (diff < buffer)
                 {
-                    await clientStream.WriteAsync(badRequestResponse, index, diff);
-                    string knownResponse = Encoding.ASCII.GetString(badRequestResponse, index, diff);
-                    Console.WriteLine("SNDING: " + knownResponse);
+                    await destinationStream.WriteAsync(messageBytes, index, diff);
                 }
                 else
                 {
-                    await clientStream.WriteAsync(badRequestResponse, index, buffer);
-                    string knownResponse = Encoding.ASCII.GetString(badRequestResponse, index, buffer);
-                    Console.WriteLine("SNDING: " + knownResponse);
+                    await destinationStream.WriteAsync(messageBytes, index, buffer);
                 }
                 index += buffer;
             }
         }
-        private static async Task CheckResponseType(MemoryStream memory, NetworkStream tmpStream)
+        private static async Task<byte[]> ReplaceImages(byte[] message)
         {
-            await tmpStream.CopyToAsync(memory);
+            //await tmpStream.CopyToAsync(memory);
+            MemoryStream memory = new MemoryStream(message);
             memory.Position = 0;
-            var data = memory.ToArray();
-            var index = BinaryMatch(data, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
-            var headers = Encoding.ASCII.GetString(data, 0, index);
+            if (message.Length == 0) throw new BadRequestException("Could not determine the stream");
+            var index = BinaryMatch(message, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
+            var headers = Encoding.ASCII.GetString(message, 0, index);
+            // change index or not?
+            // index = 0 image load but server crash
+            //index = index = image doesnt load but server is fine
             memory.Position = index;
-            bool contains = headers.Contains("Content-Type: image");
             if (headers.IndexOf("Content-Type: image/png") > 0)
             {
-                //use memory to read the body.
-                Console.WriteLine("Image wanted");
+                //use memory to read the body. replace the image if settings say so
+                byte[] b = File.ReadAllBytes(@"Assets\Placeholder.png");
+                await memory.WriteAsync(b, 0, b.Length);
             }
+            return memory.ToArray();
         }
 
         public async Task<byte[]> GetBytesFromReading(int bufferSize, NetworkStream stream)
         {
             byte[] buffer = new byte[bufferSize];
+            //use memory stream to save all bytes
             MemoryStream memory = new MemoryStream();
             do
             {

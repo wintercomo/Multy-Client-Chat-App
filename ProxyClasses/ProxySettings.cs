@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ProxyServer
 {
-    public class ProxySettings : BindableBase
+    public class ProxySettingsViewModel : BindableBase
     {
         private Int32 port;
         private Int32 cacheTimeout;

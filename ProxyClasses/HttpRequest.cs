@@ -12,16 +12,17 @@ namespace ProxyClasses
         public const string PROXY_REQUEST = "PROXY REQUEST";
         public const string RESPONSE = "RESPONSE";
         public const string MESSAGE = "MESSAGE";
+        public const string ERROR = "ERROR";
         public const string CACHED_RESPONSE = "CACHED RESPONSE";
         private string logItemInfo;
         private string type; // { PROXY, REQUEST, RESPONSE, MESSAGE };
         private string method;
         private string body;
-        ProxySettings settings;
+        ProxySettingsViewModel settings;
         Dictionary<string, string> headers = new Dictionary<string, string>();
 
 
-        public HttpRequest(string type, ProxySettings settings)
+        public HttpRequest(string type, ProxySettingsViewModel settings)
         {
             this.type = type;
             this.settings = settings;

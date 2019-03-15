@@ -23,13 +23,13 @@ namespace ProxyServer
     /// </summary>
     public partial class ProxyserverWindow : Window
     {
-        ObservableCollection<HttpRequest> LogItems = new ObservableCollection<HttpRequest>();
-        StreamReader streamReader = new StreamReader();
+        readonly ObservableCollection<HttpRequest> LogItems = new ObservableCollection<HttpRequest>();
+        readonly StreamReader streamReader = new StreamReader();
         Cacher cacher = new Cacher();
         TcpListener tcpListner;
         NetworkStream clientStream;
         TcpClient tcpClient;
-        ProxySettings settings;
+        ProxySettingsViewModel settings;
         HttpRequest clientRequest;
         HttpRequest serverResponse;
         //create a client
@@ -38,7 +38,7 @@ namespace ProxyServer
         public ProxyserverWindow()
         {
             InitializeComponent();
-            settings = new ProxySettings {
+            settings = new ProxySettingsViewModel {
                 Port = 8090, CacheTimeout= 60000, BufferSize=200,
                 CheckModifiedContent =true, ContentFilterOn=true,
                 BasicAuthOn = false, AllowChangeHeaders= true,
@@ -46,9 +46,9 @@ namespace ProxyServer
                 LogContentOut=true, LogCLientInfo = true,
                 ServerRunning=false
             };
-            this.color.Background = Brushes.Red;
-            // REPLACE THIS WITH PAGE.RECOURSE X:KEY = path
-            this.DataContext = settings;
+            // set the binding
+            settingsBlock.DataContext = settings;
+            logListBox.ItemsSource = LogItems;
             UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) {
                 LogItemInfo = "Log van:\r\n" +
                 "   * request headers\r\n" +
@@ -57,7 +57,6 @@ namespace ProxyServer
                 "   * content uit\r\n" +
                 "   * Client (Which browser is connected)"
             });
-            logListBox.ItemsSource = LogItems;
         }
         private void UpdateUIWithLogItem(HttpRequest logItem)
         {
@@ -84,10 +83,7 @@ namespace ProxyServer
             {
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Connot get request. server stopped, ERROR LOG: \r\n " + err.Message });
             }
-            catch (UriFormatException err)
-            {
-                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Cannot parse host IP: \r\n " + err.Message });
-            }
+            
             catch (ArgumentException err)
             {
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Argument Exception!: \r\n " + err.Message });
@@ -113,6 +109,8 @@ namespace ProxyServer
                 tcpClient = await tcpListner.AcceptTcpClientAsync();
                 clientStream = tcpClient.GetStream();
                 byte[] messageBytes = await streamReader.GetBytesFromReading(settings.BufferSize, clientStream);
+                Console.WriteLine($"MESSAGE BUFF {messageBytes.Length}");
+
                 string requestInfo = Encoding.ASCII.GetString(messageBytes, 0, messageBytes.Length);
                 // firefox spam requests
                 if (!requestInfo.Contains("detectportal"))
@@ -165,7 +163,8 @@ namespace ProxyServer
                     return;
                 }
                 byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method).RequestBytes;
-                await clientStream.WriteAsync(knownResponseBytes, 0, knownResponseBytes.Length);
+                await streamReader.WriteMessageWithBufferAsync(clientStream, knownResponseBytes, settings.BufferSize, settings.ContentFilterOn);
+                //await clientStream.WriteAsync(knownResponseBytes, 0, knownResponseBytes.Length);
                 string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
                 if (settings.LogContentOut)
@@ -175,7 +174,19 @@ namespace ProxyServer
                 return;
             }
             // Get the actual response
-            await HandleProxyRequest();
+            try
+            {
+                await HandleProxyRequest();
+            }
+            catch (BadRequestException err)
+            {
+                await SendBadRequest();
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.ERROR, settings) { LogItemInfo = $"Bad request from {clientRequest.Method} ERROR:\r\n {err.Message}" });
+            }
+            catch (UriFormatException err)
+            {
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Cannot parse host IP: \r\n " + err.Message });
+            }
         }
 
         public async Task SendUnAutherizedResponse()
@@ -187,7 +198,19 @@ namespace ProxyServer
             builder.AppendLine($"<htlm><body><h1>Unauthorized</h1></body></html>");
             builder.AppendLine();
             byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
-            await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse);
+            await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
+            UpdateUIWithLogItem(new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() });
+        }
+        public async Task SendBadRequest()
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine("HTTP/1.1 400 Bad Request");
+            builder.AppendLine($"Date: {DateTime.Now}");
+            builder.AppendLine();
+            builder.AppendLine("<htlm><body><h1>Bad Request</h1></body></html>");
+            builder.AppendLine();
+            byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
+            await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
             UpdateUIWithLogItem(new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() });
         }
 
@@ -196,6 +219,8 @@ namespace ProxyServer
         private async Task HandleProxyRequest()
         {
             byte[] responseData = await streamReader.DoProxyRequest(clientRequest, clientStream, settings.BufferSize);
+
+            await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize, settings.ContentFilterOn);
             string responseString = Encoding.ASCII.GetString(responseData, 0, responseData.Length);
             serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
             if (settings.LogContentIn)
