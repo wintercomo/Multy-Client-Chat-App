@@ -98,7 +98,7 @@ namespace ProxyServer
             }
             finally
             {
-
+                StopProxyServer();
             }
         }
 
@@ -176,19 +176,22 @@ namespace ProxyServer
             }
             // Get the actual response
             await HandleProxyRequest();
-            // if request is known. Send the known response back
         }
 
-        private async Task SendUnAutherizedResponse()
+        public async Task SendUnAutherizedResponse()
         {
             var builder = new StringBuilder();
             builder.AppendLine("HTTP/1.1 401 Unauthorized");
             builder.AppendLine($"Date: {DateTime.Now}");
             builder.AppendLine();
+            builder.AppendLine($"<htlm><body><h1>Unauthorized</h1></body></html>");
+            builder.AppendLine();
             byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
-            await clientStream.WriteAsync(badRequestResponse, 0, badRequestResponse.Length);
+            await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse);
             UpdateUIWithLogItem(new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() });
         }
+
+        
 
         private async Task HandleProxyRequest()
         {
@@ -210,7 +213,6 @@ namespace ProxyServer
             settings.ServerRunning = false;
             UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Proxy server Stopped Running" });
         }
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             LogItems.Clear();
