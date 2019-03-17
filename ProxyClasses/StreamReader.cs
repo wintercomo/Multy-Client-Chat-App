@@ -59,8 +59,7 @@ namespace ProxyClasses
                 MemoryStream memory = new MemoryStream();
                 //NetworkStream tmpStream = proxyTcpClient.GetStream();
                 //this line slows down the app
-                await Task.Run( async() => await proxyStream.CopyToAsync(memory));
-                //await proxyStream.CopyToAsync(memory);
+                await proxyStream.CopyToAsync(memory);
                 proxyTcpClient.Dispose();
                 proxyStream.Dispose();
                 return memory.ToArray();

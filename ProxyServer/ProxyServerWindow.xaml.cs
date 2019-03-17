@@ -27,8 +27,8 @@ namespace ProxyServer
         readonly StreamReader streamReader = new StreamReader();
         Cacher cacher = new Cacher();
         TcpListener tcpListner;
-        NetworkStream clientStream;
-        TcpClient tcpClient;
+        //NetworkStream clientStream;
+        //TcpClient tcpClient;
         ProxySettingsViewModel settings;
         HttpRequest clientRequest;
         HttpRequest serverResponse;
@@ -72,12 +72,15 @@ namespace ProxyServer
                 tcpListner.Start();
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Listening for HTTP REQUEST" });
                 settings.ServerRunning = true;
-                await ListenForHttpRequest();
+                while (true)
+                {
+                    TcpClient tcpClient = await tcpListner.AcceptTcpClientAsync();
+                    NetworkStream clientStream = tcpClient.GetStream();
+                    await ListenForHttpRequest(tcpClient);
+
+                }
             }
-            catch (HttpListenerException)
-            {
-                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Server stopped running Due to ERROR" });
-            }
+            
             catch (ObjectDisposedException err)
             {
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Connot get request. server stopped, ERROR LOG: \r\n " + err.Message });
@@ -86,10 +89,6 @@ namespace ProxyServer
             catch (ArgumentException err)
             {
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Argument Exception!: \r\n " + err.Message });
-            }
-            catch (IOException err)
-            {
-                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Refused connection! Error log: \r\n " + err.Message });
             }
             finally
             {
@@ -101,12 +100,9 @@ namespace ProxyServer
            LogItems.Add(logItem);
         }
 
-        private async Task ListenForHttpRequest()
+        private async Task ListenForHttpRequest(TcpClient tcpClient)
         {
-            while (true)
-            {
-                tcpClient = await tcpListner.AcceptTcpClientAsync();
-                clientStream = tcpClient.GetStream();
+            NetworkStream clientStream = tcpClient.GetStream();
                 byte[] messageBytes = await streamReader.GetBytesFromReading(settings.BufferSize, clientStream);
                 string requestInfo = Encoding.ASCII.GetString(messageBytes, 0, messageBytes.Length);
                 // firefox spam requests
@@ -117,19 +113,18 @@ namespace ProxyServer
                     {
                         UpdateUIWithLogItem(clientRequest);
                     }
-                    await HandleHttpRequest();
+                    await HandleHttpRequest(tcpClient);
                 }
-                tcpClient.Dispose();
-                clientStream.Dispose();
-            }
+                
         }
-        private async Task HandleHttpRequest()
+        private async Task HandleHttpRequest(TcpClient tcpClient)
         {
+            NetworkStream clientStream = tcpClient.GetStream();
             //check user info if settings say so
             if (settings.BasicAuthOn)
             {
-                //jump out if Auth failed
-                if (!await DoBasicAuth()) return;
+                //jump out if Auth faicled
+                if (!await DoBasicAuth(clientStream)) return;
             }
             if (cacher.RequestKnown(clientRequest.Method))
             {
@@ -137,7 +132,7 @@ namespace ProxyServer
                 if (settings.CheckModifiedContent && contentModified)
                 {
                     cacher.RemoveItem(clientRequest.Method);
-                    await HandleProxyRequest();
+                    await HandleProxyRequest(clientStream);
                     return;
                 }
                 byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method).TmpBytes;
@@ -148,22 +143,38 @@ namespace ProxyServer
                     UpdateUIWithLogItem(serverResponse);
                 }
                 await streamReader.WriteMessageWithBufferAsync(clientStream, knownResponseBytes, settings.BufferSize, settings.ContentFilterOn);
+                tcpClient.Dispose();
+                clientStream.Dispose();
                 return;
             }
             else
             {
                 try
                 {
-                    await HandleProxyRequest();
+                    await HandleProxyRequest(clientStream);
+                    tcpClient.Dispose();
+                    clientStream.Dispose();
                 }
-                catch (BadRequestException err)
+                catch (UriFormatException err)
                 {
-                    await SendBadRequest();
+                    await SendBadRequest(clientStream);
                     UpdateUIWithLogItem(new HttpRequest(HttpRequest.ERROR, settings) { LogItemInfo = $"Bad request from {clientRequest.Method} ERROR:\r\n {err.Message}" });
+                }
+                catch (SocketException err)
+                {
+                    if (err.SocketErrorCode.ToString() == "HostNotFound")
+                    {
+                        UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Unable to find host" });
+                    }
+                    await SendBadRequest(clientStream);
+            }
+                catch (IOException err)
+                {
+                    UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Stream closed: \r\n " + err.Message });
                 }
             }
         }
-        private async Task HandleProxyRequest()
+        private async Task HandleProxyRequest(NetworkStream clientStream)
         {
             byte[] responseData = await streamReader.DoProxyRequest(clientRequest);
             await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize, settings.ContentFilterOn);
@@ -179,12 +190,12 @@ namespace ProxyServer
                 UpdateUIWithLogItem(serverResponse);
             }
         }
-        private async Task<bool> DoBasicAuth()
+        private async Task<bool> DoBasicAuth(NetworkStream clientStream)
         {
             string authHeader = clientRequest.GetHeader("Authorization");
             if (authHeader == "")
             {
-                await SendUnAutherizedResponse();
+                await SendUnAutherizedResponse(clientStream);
                 return false;
             }
             string encodedUsernamePassword = authHeader.Substring("Basic ".Length).Trim();
@@ -192,12 +203,12 @@ namespace ProxyServer
             string usernamePassword = encoding.GetString(Convert.FromBase64String(encodedUsernamePassword));
             if (usernamePassword != "admin:admin")
             {
-                await SendUnAutherizedResponse();
+                await SendUnAutherizedResponse(clientStream);
                 return false;
             }
             return true;
         }
-        public async Task SendUnAutherizedResponse()
+        public async Task SendUnAutherizedResponse(NetworkStream clientStream)
         {
             var builder = new StringBuilder();
             builder.AppendLine("HTTP/1.1 401 Unauthorized");
@@ -209,7 +220,7 @@ namespace ProxyServer
             await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
             UpdateUIWithLogItem(new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() });
         }
-        public async Task SendBadRequest()
+        public async Task SendBadRequest(NetworkStream clientStream)
         {
             var builder = new StringBuilder();
             builder.AppendLine("HTTP/1.1 400 Bad Request");
