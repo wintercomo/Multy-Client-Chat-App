@@ -66,8 +66,6 @@ namespace ProxyClasses
         {
             get
             {
-                //UpdateHeader("Accept-Encoding", ": *");
-                //UpdateHeader("Connection", " Close");
                 //UpdateHeader("Username/Password", " admin/admin");
                 if (settings.AllowChangeHeaders)
                 {

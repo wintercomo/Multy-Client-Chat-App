@@ -55,12 +55,12 @@ namespace ProxyClasses
                 NetworkStream proxyStream = proxyTcpClient.GetStream();
                 byte[] requestInBytes = Encoding.ASCII.GetBytes(httpRequestString);
                 await proxyStream.WriteAsync(requestInBytes, 0, requestInBytes.Length);
-                byte[] buffer = new byte[bufferSize];
+                //byte[] buffer = new byte[bufferSize];
                 MemoryStream memory = new MemoryStream();
-                NetworkStream tmpStream = proxyTcpClient.GetStream();
+                //NetworkStream tmpStream = proxyTcpClient.GetStream();
                 await proxyStream.CopyToAsync(memory);
-                proxyStream.Dispose();
                 proxyTcpClient.Dispose();
+                proxyStream.Dispose();
                 return memory.ToArray();
             }
             catch(ArgumentException err)
@@ -103,6 +103,7 @@ namespace ProxyClasses
             if (message.Length == 0) throw new BadRequestException("Could not determine the stream");
             var index = BinaryMatch(message, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
             var headers = Encoding.ASCII.GetString(message, 0, index);
+            // set headers for browser caching
             // change index or not?
             // index = 0 image load but server crash
             //index = index = image doesnt load but server is fine
