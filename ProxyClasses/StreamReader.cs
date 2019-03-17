@@ -108,7 +108,7 @@ namespace ProxyClasses
             // index = 0 image load but server crash
             //index = index = image doesnt load but server is fine
             memory.Position = index;
-            if (headers.IndexOf("Content-Type: image/png") > 0)
+            if (headers.Contains("Content-Type: image"))
             {
                 //use memory to read the body. replace the image if settings say so
                 byte[] b = File.ReadAllBytes(@"Assets\Placeholder.png");

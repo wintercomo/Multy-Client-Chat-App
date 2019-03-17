@@ -72,6 +72,10 @@ namespace ProxyServer
                     StopProxyServer();
                     return;
                 }
+                tcpListner = new TcpListener(IPAddress.Any, settings.Port);
+                tcpListner.Start();
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Listening for HTTP REQUEST" });
+                settings.ServerRunning = true;
                 await ListenForHttpRequest();
                 return;
             }
@@ -100,10 +104,6 @@ namespace ProxyServer
 
         private async Task ListenForHttpRequest()
         {
-            tcpListner = new TcpListener(IPAddress.Any, settings.Port);
-            tcpListner.Start();
-            UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Listening for HTTP REQUEST" });
-            settings.ServerRunning = true;
             while (true)
             {
                 tcpClient = await tcpListner.AcceptTcpClientAsync();
@@ -120,8 +120,8 @@ namespace ProxyServer
                     }
                     await HandleHttpRequest();
                 }
-                //clientStream.Close();
-                //tcpClient.Close();
+                clientStream.Close();
+                tcpClient.Close();
             }
         }
         private async Task<bool> DoBasicAuth()
