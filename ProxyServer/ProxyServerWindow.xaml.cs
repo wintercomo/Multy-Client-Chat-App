@@ -24,16 +24,12 @@ namespace ProxyServer
     public partial class ProxyserverWindow : Window
     {
         readonly ObservableCollection<HttpRequest> LogItems = new ObservableCollection<HttpRequest>();
-        readonly StreamReader streamReader = new StreamReader();
         Cacher cacher = new Cacher();
+        readonly StreamReader streamReader = new StreamReader();
         TcpListener tcpListner;
-        //NetworkStream clientStream;
-        //TcpClient tcpClient;
         ProxySettingsViewModel settings;
         HttpRequest clientRequest;
         HttpRequest serverResponse;
-        //create a client
-                   
 
         public ProxyserverWindow()
         {
@@ -77,7 +73,8 @@ namespace ProxyServer
                     TcpClient tcpClient = await tcpListner.AcceptTcpClientAsync();
                     NetworkStream clientStream = tcpClient.GetStream();
                     await ListenForHttpRequest(tcpClient);
-
+                    tcpClient.Dispose();
+                    clientStream.Dispose();
                 }
             }
             
@@ -123,7 +120,7 @@ namespace ProxyServer
             //check user info if settings say so
             if (settings.BasicAuthOn)
             {
-                //jump out if Auth faicled
+                //jump out if Auth failed
                 if (!await DoBasicAuth(clientStream)) return;
             }
             if (cacher.RequestKnown(clientRequest.Method))
@@ -135,7 +132,7 @@ namespace ProxyServer
                     await HandleProxyRequest(clientStream);
                     return;
                 }
-                byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method).TmpBytes;
+                byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method).ResponseBytes;
                 string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
                 if (settings.LogContentOut)
@@ -143,7 +140,6 @@ namespace ProxyServer
                     UpdateUIWithLogItem(serverResponse);
                 }
                 await streamReader.WriteMessageWithBufferAsync(clientStream, knownResponseBytes, settings.BufferSize, settings.ContentFilterOn);
-                tcpClient.Dispose();
                 clientStream.Dispose();
                 return;
             }
@@ -152,8 +148,7 @@ namespace ProxyServer
                 try
                 {
                     await HandleProxyRequest(clientStream);
-                    tcpClient.Dispose();
-                    clientStream.Dispose();
+                    
                 }
                 catch (UriFormatException err)
                 {
@@ -177,7 +172,6 @@ namespace ProxyServer
         private async Task HandleProxyRequest(NetworkStream clientStream)
         {
             byte[] responseData = await streamReader.DoProxyRequest(clientRequest);
-            await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize, settings.ContentFilterOn);
             string responseString = Encoding.ASCII.GetString(responseData, 0, responseData.Length);
             serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
             //only save non img to cache 
@@ -189,6 +183,7 @@ namespace ProxyServer
             {
                 UpdateUIWithLogItem(serverResponse);
             }
+            await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize, settings.ContentFilterOn);
         }
         private async Task<bool> DoBasicAuth(NetworkStream clientStream)
         {
