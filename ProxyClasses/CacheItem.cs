@@ -16,7 +16,6 @@ namespace ProxyClasses
             }
             set
             {
-                global::System.Console.WriteLine("UPDAETING REQUEST BYTES " + value);
                 this.requestBytes = value;
             }
         }

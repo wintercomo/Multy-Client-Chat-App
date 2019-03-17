@@ -58,10 +58,6 @@ namespace ProxyServer
                 "   * Client (Which browser is connected)"
             });
         }
-        private void UpdateUIWithLogItem(HttpRequest logItem)
-        {
-           LogItems.Add(logItem);
-        }
         private async void BtnStartStopProxy_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -77,7 +73,6 @@ namespace ProxyServer
                 UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Listening for HTTP REQUEST" });
                 settings.ServerRunning = true;
                 await ListenForHttpRequest();
-                return;
             }
             catch (HttpListenerException)
             {
@@ -101,6 +96,10 @@ namespace ProxyServer
                 StopProxyServer();
             }
         }
+        private void UpdateUIWithLogItem(HttpRequest logItem)
+        {
+           LogItems.Add(logItem);
+        }
 
         private async Task ListenForHttpRequest()
         {
@@ -120,27 +119,9 @@ namespace ProxyServer
                     }
                     await HandleHttpRequest();
                 }
-                clientStream.Close();
-                tcpClient.Close();
+                tcpClient.Dispose();
+                clientStream.Dispose();
             }
-        }
-        private async Task<bool> DoBasicAuth()
-        {
-            string authHeader = clientRequest.GetHeader("Authorization");
-            if (authHeader == "")
-            {
-                await SendUnAutherizedResponse();
-                return false;
-            }
-            string encodedUsernamePassword = authHeader.Substring("Basic ".Length).Trim();
-            Encoding encoding = Encoding.GetEncoding("iso-8859-1");
-            string usernamePassword = encoding.GetString(Convert.FromBase64String(encodedUsernamePassword));
-            if (usernamePassword != "admin:admin")
-            {
-                await SendUnAutherizedResponse();
-                return false;
-            }
-            return true;
         }
         private async Task HandleHttpRequest()
         {
@@ -161,7 +142,6 @@ namespace ProxyServer
                 }
                 byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method).TmpBytes;
                 string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
-                Console.WriteLine(knownResponse);
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
                 if (settings.LogContentOut)
                 {
@@ -183,7 +163,40 @@ namespace ProxyServer
                 }
             }
         }
-
+        private async Task HandleProxyRequest()
+        {
+            byte[] responseData = await streamReader.DoProxyRequest(clientRequest);
+            await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize, settings.ContentFilterOn);
+            string responseString = Encoding.ASCII.GetString(responseData, 0, responseData.Length);
+            serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
+            //only save non img to cache 
+            if (!serverResponse.GetHeader("Content-Type").Contains("image"))
+            {
+                cacher.addRequest(clientRequest.Method, responseData);
+            }
+            if (settings.LogContentIn)
+            {
+                UpdateUIWithLogItem(serverResponse);
+            }
+        }
+        private async Task<bool> DoBasicAuth()
+        {
+            string authHeader = clientRequest.GetHeader("Authorization");
+            if (authHeader == "")
+            {
+                await SendUnAutherizedResponse();
+                return false;
+            }
+            string encodedUsernamePassword = authHeader.Substring("Basic ".Length).Trim();
+            Encoding encoding = Encoding.GetEncoding("iso-8859-1");
+            string usernamePassword = encoding.GetString(Convert.FromBase64String(encodedUsernamePassword));
+            if (usernamePassword != "admin:admin")
+            {
+                await SendUnAutherizedResponse();
+                return false;
+            }
+            return true;
+        }
         public async Task SendUnAutherizedResponse()
         {
             var builder = new StringBuilder();
@@ -208,28 +221,6 @@ namespace ProxyServer
             await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
             UpdateUIWithLogItem(new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() });
         }
-
-        
-
-        private async Task HandleProxyRequest()
-        {
-            byte[] responseData = await streamReader.DoProxyRequest(clientRequest, clientStream, settings.BufferSize);
-            //Adding request to cache
-            
-            await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize, settings.ContentFilterOn);
-            string responseString = Encoding.ASCII.GetString(responseData, 0, responseData.Length);
-            serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
-            //only save non img to cache
-            if (!serverResponse.GetHeader("Content-Type").Contains("image"))
-            {
-                cacher.addRequest(clientRequest.Method, responseData);
-            }
-            if (settings.LogContentIn)
-            {
-                UpdateUIWithLogItem(serverResponse);
-            }
-        }
-
         private void StopProxyServer()
         {
             if (tcpListner != null)

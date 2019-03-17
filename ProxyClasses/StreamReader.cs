@@ -44,7 +44,7 @@ namespace ProxyClasses
             }
             return -1;
         }
-        public async Task<byte[]> DoProxyRequest(HttpRequest httpRequest,NetworkStream clientStream, Int32 bufferSize = 1024)
+        public async Task<byte[]> DoProxyRequest(HttpRequest httpRequest)
         {
             try
             {
@@ -58,7 +58,9 @@ namespace ProxyClasses
                 //byte[] buffer = new byte[bufferSize];
                 MemoryStream memory = new MemoryStream();
                 //NetworkStream tmpStream = proxyTcpClient.GetStream();
-                await proxyStream.CopyToAsync(memory);
+                //this line slows down the app
+                await Task.Run( async() => await proxyStream.CopyToAsync(memory));
+                //await proxyStream.CopyToAsync(memory);
                 proxyTcpClient.Dispose();
                 proxyStream.Dispose();
                 return memory.ToArray();
@@ -90,6 +92,7 @@ namespace ProxyClasses
                 }
                 else
                 {
+
                     await destinationStream.WriteAsync(messageBytes, index, buffer);
                 }
                 index += buffer;
@@ -97,22 +100,17 @@ namespace ProxyClasses
         }
         private static async Task<byte[]> ReplaceImages(byte[] message)
         {
-            //await tmpStream.CopyToAsync(memory);
             MemoryStream memory = new MemoryStream(message);
             memory.Position = 0;
             if (message.Length == 0) throw new BadRequestException("Could not determine the stream");
             var index = BinaryMatch(message, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
             var headers = Encoding.ASCII.GetString(message, 0, index);
-            // set headers for browser caching
-            // change index or not?
-            // index = 0 image load but server crash
-            //index = index = image doesnt load but server is fine
             memory.Position = index;
             if (headers.Contains("Content-Type: image"))
             {
                 //use memory to read the body. replace the image if settings say so
-                byte[] b = File.ReadAllBytes(@"Assets\Placeholder.png");
-                await memory.WriteAsync(b, 0, b.Length);
+                byte[] placeholderBytes = File.ReadAllBytes(@"Assets\Placeholder.png");
+                await memory.WriteAsync(placeholderBytes, 0, placeholderBytes.Length);
             }
             return memory.ToArray();
         }

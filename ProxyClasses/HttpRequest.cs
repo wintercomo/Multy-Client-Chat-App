@@ -66,7 +66,7 @@ namespace ProxyClasses
         {
             get
             {
-                //UpdateHeader("Username/Password", " admin/admin");
+                UpdateHeader("Connection", " Close");
                 if (settings.AllowChangeHeaders)
                 {
                     // Remove server and user headers (From assigment discription)
