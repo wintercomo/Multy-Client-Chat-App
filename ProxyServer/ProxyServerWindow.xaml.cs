@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -78,15 +79,7 @@ namespace ProxyServer
                 }
             }
             
-            catch (ObjectDisposedException err)
-            {
-                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Connot get request. server stopped, ERROR LOG: \r\n " + err.Message });
-            }
-            
-            catch (ArgumentException err)
-            {
-                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Argument Exception!: \r\n " + err.Message });
-            }
+           
             finally
             {
                 StopProxyServer();
@@ -99,9 +92,10 @@ namespace ProxyServer
 
         private async Task ListenForHttpRequest(TcpClient tcpClient)
         {
-            NetworkStream clientStream = tcpClient.GetStream();
-                byte[] messageBytes = await streamReader.GetBytesFromReading(settings.BufferSize, clientStream);
-                string requestInfo = Encoding.ASCII.GetString(messageBytes, 0, messageBytes.Length);
+            try
+            {
+                NetworkStream clientStream = tcpClient.GetStream();
+                string requestInfo = await streamReader.GetStringFromReading(settings.BufferSize, clientStream);
                 // firefox spam requests
                 if (!requestInfo.Contains("detectportal"))
                 {
@@ -112,17 +106,38 @@ namespace ProxyServer
                     }
                     await HandleHttpRequest(tcpClient);
                 }
-                
+            }
+            catch (ObjectDisposedException err)
+            {
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Connot get request. server stopped, ERROR LOG: \r\n " + err.Message });
+            }
+
+            catch (ArgumentException err)
+            {
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Argument Exception!: \r\n " + err.Message });
+            }
+            catch (UriFormatException err)
+            {
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.ERROR, settings) { LogItemInfo = $"Bad request from {clientRequest.Method} ERROR:\r\n {err.Message}" });
+            }
+            catch (SocketException err)
+            {
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Unable to find host" });
+            }
+            catch (IOException err)
+            {
+                UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Stream closed: \r\n " + err.Message });
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
         private async Task HandleHttpRequest(TcpClient tcpClient)
         {
             NetworkStream clientStream = tcpClient.GetStream();
             //check user info if settings say so
-            if (settings.BasicAuthOn)
-            {
-                //jump out if Auth failed
-                if (!await DoBasicAuth(clientStream)) return;
-            }
+            if (settings.BasicAuthOn && !await DoBasicAuth(clientStream)) return;
             if (cacher.RequestKnown(clientRequest.Method))
             {
                 bool contentModified = cacher.ContentModified(cacher.GetKnownResponse(clientRequest.Method), settings.CacheTimeout);
@@ -133,57 +148,35 @@ namespace ProxyServer
                     return;
                 }
                 byte[] knownResponseBytes = cacher.GetKnownResponse(clientRequest.Method).ResponseBytes;
+                if (settings.ContentFilterOn)
+                {
+                    knownResponseBytes = await streamReader.ReplaceImages(knownResponseBytes);
+                }
                 string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
+                await streamReader.WriteMessageWithBufferAsync(clientStream, knownResponseBytes, settings.BufferSize);
                 if (settings.LogContentOut)
                 {
                     UpdateUIWithLogItem(serverResponse);
                 }
-                await streamReader.WriteMessageWithBufferAsync(clientStream, knownResponseBytes, settings.BufferSize, settings.ContentFilterOn);
-                clientStream.Dispose();
                 return;
             }
-            else
-            {
-                try
-                {
-                    await HandleProxyRequest(clientStream);
-                    
-                }
-                catch (UriFormatException err)
-                {
-                    await SendBadRequest(clientStream);
-                    UpdateUIWithLogItem(new HttpRequest(HttpRequest.ERROR, settings) { LogItemInfo = $"Bad request from {clientRequest.Method} ERROR:\r\n {err.Message}" });
-                }
-                catch (SocketException err)
-                {
-                    if (err.SocketErrorCode.ToString() == "HostNotFound")
-                    {
-                        UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Unable to find host" });
-                    }
-                    await SendBadRequest(clientStream);
-            }
-                catch (IOException err)
-                {
-                    UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) { LogItemInfo = "Stream closed: \r\n " + err.Message });
-                }
-            }
+            await HandleProxyRequest(clientStream);
         }
         private async Task HandleProxyRequest(NetworkStream clientStream)
         {
-            byte[] responseData = await streamReader.DoProxyRequest(clientRequest);
+            NetworkStream responseStream = await streamReader.DoProxyRequest(clientRequest, settings.BufferSize);
+            byte[] responseData = await streamReader.GetBytesFromReading(settings.BufferSize, responseStream);
             string responseString = Encoding.ASCII.GetString(responseData, 0, responseData.Length);
             serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
+            if (settings.ContentFilterOn)
+            {
+                responseData = await streamReader.ReplaceImages(responseData);
+            }
             //only save non img to cache 
-            if (!serverResponse.GetHeader("Content-Type").Contains("image"))
-            {
-                cacher.addRequest(clientRequest.Method, responseData);
-            }
-            if (settings.LogContentIn)
-            {
-                UpdateUIWithLogItem(serverResponse);
-            }
-            await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize, settings.ContentFilterOn);
+            if (!serverResponse.GetHeader("Content-Type").Contains("image"))cacher.addRequest(clientRequest.Method, responseData);
+            if (settings.LogContentIn) UpdateUIWithLogItem(serverResponse);
+            await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize);
         }
         private async Task<bool> DoBasicAuth(NetworkStream clientStream)
         {
@@ -209,7 +202,7 @@ namespace ProxyServer
             builder.AppendLine("HTTP/1.1 401 Unauthorized");
             builder.AppendLine($"Date: {DateTime.Now}");
             builder.AppendLine();
-            builder.AppendLine($"<htlm><body><h1>Unauthorized</h1></body></html>");
+            builder.AppendLine($"<html><body><h1>Unauthorized</h1></body></html>");
             builder.AppendLine();
             byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
             await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
@@ -221,7 +214,7 @@ namespace ProxyServer
             builder.AppendLine("HTTP/1.1 400 Bad Request");
             builder.AppendLine($"Date: {DateTime.Now}");
             builder.AppendLine();
-            builder.AppendLine("<htlm><body><h1>Bad Request</h1></body></html>");
+            builder.AppendLine("<html><body><h1>Bad Request</h1></body></html>");
             builder.AppendLine();
             byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
             await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);

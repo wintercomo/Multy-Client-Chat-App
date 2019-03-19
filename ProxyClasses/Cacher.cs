@@ -18,13 +18,7 @@ namespace ProxyClasses
         }
         public bool ContentModified(CacheItem item, Int32 cacheTimeout)
         {
-            var diffInSeconds = (DateTime.Now - item.TimeSaved ).TotalSeconds;
-            var timoutSeconds = TimeSpan.FromMilliseconds(cacheTimeout).TotalSeconds;
-            if (diffInSeconds > timoutSeconds)
-            {
-                return true;
-            }
-            return false;
+            return ((DateTime.Now - item.TimeSaved).TotalSeconds > cacheTimeout);
         }
         public CacheItem GetKnownResponse(string request)
         {

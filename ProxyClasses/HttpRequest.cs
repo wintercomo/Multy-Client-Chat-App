@@ -67,7 +67,7 @@ namespace ProxyClasses
             get
             {
                 // set headers to disable browser cache
-                UpdateHeader("Connection", " Close");
+                //UpdateHeader("Connection", " Close");
                 if (settings.AllowChangeHeaders)
                 {
                     // Remove server and user headers (From assigment discription)
@@ -76,17 +76,6 @@ namespace ProxyClasses
                 }
                 return $"{Method}\r\n{Headers}\r\n{Body}";
             }
-        }
-        
-        public bool CheckIfModifiedContent()
-        {
-            if (headers.ContainsKey("Last-Modified"))
-            {
-                DateTime localDate = DateTime.Now;
-                DateTime lastModified = DateTime.Parse(headers["Last-Modified"].Substring(2));
-                return localDate > lastModified;
-            }
-            return false;
         }
         //TODO edit this function so the type is used to display different data
         public string LogItemInfo

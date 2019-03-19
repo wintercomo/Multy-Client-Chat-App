@@ -44,25 +44,18 @@ namespace ProxyClasses
             }
             return -1;
         }
-        public async Task<byte[]> DoProxyRequest(HttpRequest httpRequest)
+        public async Task<NetworkStream> DoProxyRequest(HttpRequest httpRequest, int bufferSize)
         {
             try
             {
                 string httpRequestString = httpRequest.HttpString;
                 string hostString = httpRequest.GetHeader("Host");
-                Uri baseUri = new Uri("http://" + hostString);
+                Uri baseUri = new Uri($"http://{hostString}");
                 TcpClient proxyTcpClient = new TcpClient(baseUri.Host, baseUri.Port);
                 NetworkStream proxyStream = proxyTcpClient.GetStream();
                 byte[] requestInBytes = Encoding.ASCII.GetBytes(httpRequestString);
-                await proxyStream.WriteAsync(requestInBytes, 0, requestInBytes.Length);
-                //byte[] buffer = new byte[bufferSize];
-                MemoryStream memory = new MemoryStream();
-                //NetworkStream tmpStream = proxyTcpClient.GetStream();
-                //this line slows down the app
-                await proxyStream.CopyToAsync(memory);
-                proxyTcpClient.Dispose();
-                proxyStream.Dispose();
-                return memory.ToArray();
+                await WriteMessageWithBufferAsync(proxyStream, requestInBytes, bufferSize);
+                return proxyStream;
             }
             catch(ArgumentException err)
             {
@@ -74,20 +67,15 @@ namespace ProxyClasses
                 throw;
             }
         }
-        public async Task WriteMessageWithBufferAsync(NetworkStream destinationStream, byte[] messageBytes, int buffer, bool removeImg = false)
+        public async Task WriteMessageWithBufferAsync(NetworkStream destinationStream, byte[] messageBytes, int buffer)
         {
-            if (removeImg)
-            {
-                //BUG HERE
-                messageBytes = await ReplaceImages(messageBytes);
-            }
             int index = 0;
             while (index < messageBytes.Length)
             {
-                int diff =  messageBytes.Length - index;
-                if (diff < buffer)
+                int remainingBytes =  messageBytes.Length - index;
+                if (remainingBytes < buffer)
                 {
-                    await destinationStream.WriteAsync(messageBytes, index, diff);
+                    await destinationStream.WriteAsync(messageBytes, index, remainingBytes);
                 }
                 else
                 {
@@ -97,8 +85,9 @@ namespace ProxyClasses
                 index += buffer;
             }
         }
-        private static async Task<byte[]> ReplaceImages(byte[] message)
+        public async Task<byte[]> ReplaceImages(byte[] message)
         {
+
             MemoryStream memory = new MemoryStream(message);
             memory.Position = 0;
             if (message.Length == 0) throw new BadRequestException("Could not determine the stream");
@@ -125,6 +114,21 @@ namespace ProxyClasses
                 await memory.WriteAsync(buffer, 0, readBytes);
             } while (stream.DataAvailable);
             return memory.ToArray();
+        }
+        // CHECK IF THIS CAN BE USED
+        // TRY TO GET RID OF MEMORYSTREAM EVERYWHERE!!!
+
+        public async Task<string> GetStringFromReading(int bufferSize, NetworkStream stream)
+        {
+            byte[] buffer = new byte[bufferSize];
+            string result = "";
+            //use memory stream to save all bytes
+            do
+            {
+                int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
+                result += Encoding.ASCII.GetString(buffer,0,readBytes);
+            } while (stream.DataAvailable);
+            return result;
         }
     }
 }

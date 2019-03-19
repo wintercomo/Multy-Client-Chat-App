@@ -8,7 +8,6 @@ namespace ProxyClasses
     public class LogViewModel:BindableBase
     {
         ObservableCollection<HttpRequest> logItems = new ObservableCollection<HttpRequest>();
-        string test;
 
         public ObservableCollection<HttpRequest> LogItems { get => logItems;
             set
@@ -23,6 +22,5 @@ namespace ProxyClasses
         {
             logItems.Add(item);
         }
-        public string Test { get => "Test"; set => test = value; }
     }
 }
