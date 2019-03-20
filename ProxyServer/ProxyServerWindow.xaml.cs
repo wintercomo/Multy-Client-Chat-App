@@ -73,13 +73,9 @@ namespace ProxyServer
                 {
                     TcpClient tcpClient = await tcpListner.AcceptTcpClientAsync();
                     NetworkStream clientStream = tcpClient.GetStream();
-                    //observer collection cannot be modified because was made in UI thread
-                    // Make delegate to add item to collection;
                     var t = Task.Run(async () => await ListenForHttpRequest(tcpClient));
-                    if (settings.LogContentIn) UpdateUIWithLogItem(clientRequest);
-                    if (settings.LogContentOut) UpdateUIWithLogItem(serverResponse);
-                    //tcpClient.Dispose();
-                    //clientStream.Dispose();
+                    if (settings.LogContentIn && clientRequest != null) UpdateUIWithLogItem(clientRequest);
+                    if (settings.LogContentOut && serverResponse != null) UpdateUIWithLogItem(serverResponse);
                 }
             }
 
@@ -168,7 +164,7 @@ namespace ProxyServer
                 responseData = await streamReader.ReplaceImages(responseData);
             }
             //only save non img to cache 
-            if (!serverResponse.GetHeader("Content-Type").Contains("image"))cacher.addRequest(clientRequest.Method, responseData);
+            if (!serverResponse.GetHeader("Content-Type").Contains("image") && !serverResponse.Method.Contains("Partial Content"))cacher.addRequest(clientRequest.Method, responseData);
             await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize);
         }
         private async Task<bool> DoBasicAuth(NetworkStream clientStream)
@@ -199,7 +195,7 @@ namespace ProxyServer
             builder.AppendLine();
             byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
             await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
-            UpdateUIWithLogItem(new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() });
+            serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() };
         }
         public async Task SendBadRequest(NetworkStream clientStream)
         {
@@ -211,7 +207,7 @@ namespace ProxyServer
             builder.AppendLine();
             byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
             await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
-            UpdateUIWithLogItem(new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() });
+            serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() };
         }
         private void StopProxyServer()
         {
