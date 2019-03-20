@@ -67,7 +67,7 @@ namespace ProxyClasses
             get
             {
                 // set headers to disable browser cache
-                //UpdateHeader("Connection", " Close");
+                UpdateHeader("Connection", " Close");
                 if (settings.AllowChangeHeaders)
                 {
                     // Remove server and user headers (From assigment discription)

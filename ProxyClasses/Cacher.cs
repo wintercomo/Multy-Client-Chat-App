@@ -16,7 +16,7 @@ namespace ProxyClasses
         {
             knowRequests.Remove(key);
         }
-        public bool ContentModified(CacheItem item, Int32 cacheTimeout)
+        public bool OlderThanTimeout(CacheItem item, Int32 cacheTimeout)
         {
             return ((DateTime.Now - item.TimeSaved).TotalSeconds > cacheTimeout);
         }

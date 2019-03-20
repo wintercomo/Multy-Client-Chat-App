@@ -44,7 +44,7 @@ namespace ProxyClasses
             }
             return -1;
         }
-        public async Task<NetworkStream> MakeProxyRequestAsync(HttpRequest httpRequest, int bufferSize)
+        public async Task<byte[]> MakeProxyRequestAsync(HttpRequest httpRequest, int bufferSize)
         {
             try
             {
@@ -56,7 +56,10 @@ namespace ProxyClasses
                 NetworkStream proxyStream = proxyTcpClient.GetStream();
                 byte[] requestInBytes = Encoding.ASCII.GetBytes(httpRequestString);
                 await WriteMessageWithBufferAsync(proxyStream, requestInBytes, bufferSize);
-                return proxyStream;
+                byte[] responseBytes = await GetBytesFromReading(bufferSize, proxyStream);
+                proxyTcpClient.Dispose();
+                proxyStream.Dispose();
+                return responseBytes;
             }
             catch (ArgumentException err)
             {
