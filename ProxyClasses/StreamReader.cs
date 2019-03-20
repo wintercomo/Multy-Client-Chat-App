@@ -23,7 +23,7 @@ namespace ProxyClasses
                 return "";
             }
         }
-        private static int BinaryMatch(byte[] input, byte[] pattern)
+        private async Task<int> BinaryMatch(byte[] input, byte[] pattern)
         {
             int sLen = input.Length - pattern.Length + 1;
             for (int i = 0; i < sLen; ++i)
@@ -44,20 +44,21 @@ namespace ProxyClasses
             }
             return -1;
         }
-        public async Task<NetworkStream> DoProxyRequest(HttpRequest httpRequest, int bufferSize)
+        public async Task<NetworkStream> MakeProxyRequestAsync(HttpRequest httpRequest, int bufferSize)
         {
             try
             {
                 string httpRequestString = httpRequest.HttpString;
                 string hostString = httpRequest.GetHeader("Host");
                 Uri baseUri = new Uri($"http://{hostString}");
-                TcpClient proxyTcpClient = new TcpClient(baseUri.Host, baseUri.Port);
+                TcpClient proxyTcpClient = new TcpClient();
+                await proxyTcpClient.ConnectAsync(baseUri.Host, baseUri.Port);
                 NetworkStream proxyStream = proxyTcpClient.GetStream();
                 byte[] requestInBytes = Encoding.ASCII.GetBytes(httpRequestString);
                 await WriteMessageWithBufferAsync(proxyStream, requestInBytes, bufferSize);
                 return proxyStream;
             }
-            catch(ArgumentException err)
+            catch (ArgumentException err)
             {
                 throw new BadRequestException(err.Message);
             }
@@ -72,7 +73,7 @@ namespace ProxyClasses
             int index = 0;
             while (index < messageBytes.Length)
             {
-                int remainingBytes =  messageBytes.Length - index;
+                int remainingBytes = messageBytes.Length - index;
                 if (remainingBytes < buffer)
                 {
                     await destinationStream.WriteAsync(messageBytes, index, remainingBytes);
@@ -91,7 +92,7 @@ namespace ProxyClasses
             MemoryStream memory = new MemoryStream(message);
             memory.Position = 0;
             if (message.Length == 0) throw new BadRequestException("Could not determine the stream");
-            var index = BinaryMatch(message, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
+            var index = await BinaryMatch(message, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
             var headers = Encoding.ASCII.GetString(message, 0, index);
             memory.Position = index;
             if (headers.Contains("Content-Type: image"))
@@ -100,6 +101,7 @@ namespace ProxyClasses
                 byte[] placeholderBytes = File.ReadAllBytes(@"Assets\Placeholder.png");
                 await memory.WriteAsync(placeholderBytes, 0, placeholderBytes.Length);
             }
+            memory.Dispose();
             return memory.ToArray();
         }
 
@@ -113,6 +115,7 @@ namespace ProxyClasses
                 int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
                 await memory.WriteAsync(buffer, 0, readBytes);
             } while (stream.DataAvailable);
+            memory.Dispose();
             return memory.ToArray();
         }
         // CHECK IF THIS CAN BE USED
@@ -126,9 +129,11 @@ namespace ProxyClasses
             do
             {
                 int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
-                result += Encoding.ASCII.GetString(buffer,0,readBytes);
+                result += Encoding.ASCII.GetString(buffer, 0, readBytes);
             } while (stream.DataAvailable);
             return result;
         }
+
+
     }
 }
