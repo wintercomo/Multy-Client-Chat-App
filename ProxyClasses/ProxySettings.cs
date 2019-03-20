@@ -50,6 +50,7 @@ namespace ProxyServer
             get { return bufferSize; }
             set
             {
+                if (value <= 0) value = 1;
                 if (SetProperty<int>(ref bufferSize, value))
                 {
                     this.bufferSize = value;
