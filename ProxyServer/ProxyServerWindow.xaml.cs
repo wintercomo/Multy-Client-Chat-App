@@ -212,6 +212,11 @@ namespace ProxyServer
             byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
             await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
             serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() };
+            tcpClient.Dispose();
+            clientStream.Dispose();
+            clientRequest = null;
+            serverResponse = null;
+            cachedResponse = null;
         }
         public async Task SendBadRequest(NetworkStream clientStream)
         {

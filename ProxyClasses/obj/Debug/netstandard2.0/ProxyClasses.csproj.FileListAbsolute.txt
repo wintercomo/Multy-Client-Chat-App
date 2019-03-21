@@ -34,3 +34,12 @@ C:\Users\HP\Desktop\Stable versiion Proxy - Copy\ProxyClasses\obj\Debug\netstand
 C:\Users\HP\Desktop\Stable versiion Proxy - Copy\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.AssemblyInfo.cs
 C:\Users\HP\Desktop\Stable versiion Proxy - Copy\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.dll
 C:\Users\HP\Desktop\Stable versiion Proxy - Copy\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.pdb
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\bin\Debug\netstandard2.0\ProxyClasses.deps.json
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\bin\Debug\netstandard2.0\ProxyClasses.dll
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\bin\Debug\netstandard2.0\ProxyClasses.pdb
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.csprojAssemblyReference.cache
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.csproj.CoreCompileInputs.cache
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.AssemblyInfoInputs.cache
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.AssemblyInfo.cs
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.dll
+C:\Users\HP\Desktop\WORKING COPY\ProxyClasses\obj\Debug\netstandard2.0\ProxyClasses.pdb
