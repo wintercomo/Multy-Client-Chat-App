@@ -25,7 +25,7 @@ namespace ProxyServer
     /// </summary>
     public partial class ProxyserverWindow : Window
     {
-        readonly ObservableCollection<HttpRequest> LogItems = new ObservableCollection<HttpRequest>();
+        ObservableCollection<HttpRequest> LogItems = new ObservableCollection<HttpRequest>();
         Cacher cacher = new Cacher();
         readonly StreamReader streamReader = new StreamReader();
         TcpListener tcpListner;
@@ -34,6 +34,7 @@ namespace ProxyServer
         HttpRequest serverResponse;
         CacheItem cachedResponse;
         TcpClient tcpClient;
+        object _itemsLock = new object ();
         public ProxyserverWindow()
         {
         InitializeComponent();
@@ -45,6 +46,7 @@ namespace ProxyServer
                 LogContentOut=true, LogCLientInfo = true,
                 ServerRunning=false
             };
+            BindingOperations.EnableCollectionSynchronization(LogItems, _itemsLock);
             // set the binding
             settingsBlock.DataContext = settings;
             logListBox.ItemsSource = LogItems;
@@ -80,6 +82,7 @@ namespace ProxyServer
                     {
                         Console.WriteLine(clientRequest.Method + "\r\n" +  serverResponse.Method);
                         UpdateUIWithLogItem(serverResponse);
+                        
                     }
                 }
             }
@@ -112,7 +115,7 @@ namespace ProxyServer
         }
         private void UpdateUIWithLogItem(HttpRequest logItem)
         {
-           LogItems.Add(logItem);
+                LogItems.Add(logItem);
         }
 
         private async Task ListenForHttpRequest(TcpClient tcpClient)
@@ -150,7 +153,10 @@ namespace ProxyServer
                 string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
                 string modifiedDate = serverResponse.GetHeader("Last-Modified");
-                clientRequest.UpdateHeader("If-Modified-Since", $" {modifiedDate}");
+                if (modifiedDate != "")
+                {
+                    clientRequest.UpdateHeader("If-Modified-Since", $" {modifiedDate}");
+                }
             }
             await HandleProxyRequest(clientStream);
         }
@@ -164,12 +170,12 @@ namespace ProxyServer
                 responseData = cachedResponse.responseBytes;
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = responseString };
                 await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize);
-                return;
             }
             if (settings.ContentFilterOn)
             {
                 responseData = await streamReader.ReplaceImages(responseData);
             }
+            //UpdateUIWithLogItem(serverResponse);
             //Do not save img or partial content
             if (!serverResponse.GetHeader("Content-Type").Contains("image") 
                 && serverResponse.Method.Contains("200 OK")) cacher.addRequest(clientRequest.Method, responseData);
@@ -177,8 +183,8 @@ namespace ProxyServer
             tcpClient.Dispose();
             clientStream.Dispose();
             clientRequest = null;
-            serverResponse= null;
-            cachedResponse= null;
+            serverResponse = null;
+            cachedResponse = null;
         }
         private async Task<bool> DoBasicAuth(NetworkStream clientStream)
         {
