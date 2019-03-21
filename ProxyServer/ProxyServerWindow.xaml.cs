@@ -76,8 +76,11 @@ namespace ProxyServer
                     tcpClient = await tcpListner.AcceptTcpClientAsync();
                     NetworkStream clientStream = tcpClient.GetStream();
                     await ListenForHttpRequest(tcpClient);
-                    if (settings.LogContentOut && serverResponse != null) UpdateUIWithLogItem(serverResponse);
-                    
+                    if (settings.LogContentOut && serverResponse != null)
+                    {
+                        Console.WriteLine(clientRequest.Method + "\r\n" +  serverResponse.Method);
+                        UpdateUIWithLogItem(serverResponse);
+                    }
                 }
             }
 
@@ -123,9 +126,6 @@ namespace ProxyServer
                 if (settings.LogContentIn && clientRequest != null) UpdateUIWithLogItem(clientRequest);
                 var t = Task.Run(async () => await HandleHttpRequest(tcpClient));
             }
-            //clientRequest = null;
-            //serverResponse= null;
-            //cachedResponse= null;
         }
         private async Task HandleHttpRequest(TcpClient tcpClient)
         {
@@ -151,8 +151,6 @@ namespace ProxyServer
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
                 string modifiedDate = serverResponse.GetHeader("Last-Modified");
                 clientRequest.UpdateHeader("If-Modified-Since", $" {modifiedDate}");
-                //await streamReader.WriteMessageWithBufferAsync(clientStream, knownResponseBytes, settings.BufferSize);
-                //return;
             }
             await HandleProxyRequest(clientStream);
         }
@@ -174,8 +172,7 @@ namespace ProxyServer
             }
             //Do not save img or partial content
             if (!serverResponse.GetHeader("Content-Type").Contains("image") 
-                && !serverResponse.Method.Contains("Partial Content") 
-                && !serverResponse.Method.Contains("Not Modified")) cacher.addRequest(clientRequest.Method, responseData);
+                && serverResponse.Method.Contains("200 OK")) cacher.addRequest(clientRequest.Method, responseData);
             await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize);
             tcpClient.Dispose();
             clientStream.Dispose();
