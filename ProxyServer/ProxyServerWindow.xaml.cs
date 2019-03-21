@@ -35,6 +35,8 @@ namespace ProxyServer
         CacheItem cachedResponse;
         TcpClient tcpClient;
         object _itemsLock = new object ();
+        delegate void updateUIDelegate(HttpRequest httpRequest);
+        static updateUIDelegate updateUIWithDelegate;
         public ProxyserverWindow()
         {
         InitializeComponent();
@@ -47,10 +49,11 @@ namespace ProxyServer
                 ServerRunning=false
             };
             BindingOperations.EnableCollectionSynchronization(LogItems, _itemsLock);
+            updateUIWithDelegate = new updateUIDelegate(UpdateUIWithLogItem);
             // set the binding
             settingsBlock.DataContext = settings;
             logListBox.ItemsSource = LogItems;
-            UpdateUIWithLogItem(new HttpRequest(HttpRequest.MESSAGE, settings) {
+            updateUIWithDelegate(new HttpRequest(HttpRequest.MESSAGE, settings) {
                 LogItemInfo = "Log van:\r\n" +
                 "   * request headers\r\n" +
                 "   * Response headers\r\n" +
@@ -123,7 +126,7 @@ namespace ProxyServer
             {
                 clientRequest = new HttpRequest(HttpRequest.REQUEST, settings) { LogItemInfo = requestInfo };
                 if (settings.LogContentIn && clientRequest != null) UpdateUIWithLogItem(clientRequest);
-                var t = Task.Run(async () => await HandleHttpRequest(tcpClient));
+                Task _= Task.Run(async () => await HandleHttpRequest(tcpClient));
             }
         }
         private async Task HandleHttpRequest(TcpClient tcpClient)
@@ -163,7 +166,7 @@ namespace ProxyServer
             }
             if (settings.ContentFilterOn) responseData = await streamReader.ReplaceImages(responseData);
             // find a way to be able to do this
-            //UpdateUIWithLogItem(serverResponse);
+            //updateUIWithDelegate(serverResponse);
             await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize);
             OnEndRequest(clientStream, responseData);
         }
