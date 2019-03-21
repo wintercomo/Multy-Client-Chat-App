@@ -93,12 +93,8 @@ namespace ProxyClasses
             }
             set
             {
-                if (SetProperty<string>(ref logItemInfo, value))
-                {
-                    SeperateProtocolElements(value);
-                    this.logItemInfo = value;
-                }
-                
+                SeperateProtocolElements(value);
+                this.logItemInfo = value;
             }
         }
 

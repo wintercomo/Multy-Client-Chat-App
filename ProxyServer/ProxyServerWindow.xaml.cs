@@ -78,12 +78,7 @@ namespace ProxyServer
                     tcpClient = await tcpListner.AcceptTcpClientAsync();
                     NetworkStream clientStream = tcpClient.GetStream();
                     await ListenForHttpRequest(tcpClient);
-                    if (settings.LogContentOut && serverResponse != null)
-                    {
-                        Console.WriteLine(clientRequest.Method + "\r\n" +  serverResponse.Method);
-                        UpdateUIWithLogItem(serverResponse);
-                        
-                    }
+                    if (settings.LogContentOut && serverResponse != null) UpdateUIWithLogItem(serverResponse);
                 }
             }
 
@@ -121,7 +116,8 @@ namespace ProxyServer
         private async Task ListenForHttpRequest(TcpClient tcpClient)
         {
             NetworkStream clientStream = tcpClient.GetStream();
-            string requestInfo = await streamReader.GetStringFromReading(settings.BufferSize, clientStream);
+            byte[] requestBytes = await streamReader.GetBytesFromReading(settings.BufferSize, clientStream);
+            string requestInfo = ASCIIEncoding.ASCII.GetString(requestBytes,0,requestBytes.Length);
             // firefox spam requests
             if (!requestInfo.Contains("detectportal"))
             {
@@ -146,17 +142,11 @@ namespace ProxyServer
                     return;
                 }
                 byte[] knownResponseBytes = cachedResponse.ResponseBytes;
-                if (settings.ContentFilterOn)
-                {
-                    knownResponseBytes = await streamReader.ReplaceImages(knownResponseBytes);
-                }
+                if (settings.ContentFilterOn) knownResponseBytes = await streamReader.ReplaceImages(knownResponseBytes);
                 string knownResponse = Encoding.ASCII.GetString(knownResponseBytes, 0, knownResponseBytes.Length);
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = knownResponse };
                 string modifiedDate = serverResponse.GetHeader("Last-Modified");
-                if (modifiedDate != "")
-                {
-                    clientRequest.UpdateHeader("If-Modified-Since", $" {modifiedDate}");
-                }
+                if (modifiedDate != "") clientRequest.UpdateHeader("If-Modified-Since", $" {modifiedDate}");
             }
             await HandleProxyRequest(clientStream);
         }
@@ -167,25 +157,29 @@ namespace ProxyServer
             serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = responseString };
             if (serverResponse.Method.Contains("304 Not Modified"))
             {
-                responseData = cachedResponse.responseBytes;
+                responseData = cachedResponse.ResponseBytes;
                 serverResponse = new HttpRequest(HttpRequest.CACHED_RESPONSE, settings) { LogItemInfo = responseString };
                 await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize);
             }
-            if (settings.ContentFilterOn)
-            {
-                responseData = await streamReader.ReplaceImages(responseData);
-            }
+            if (settings.ContentFilterOn) responseData = await streamReader.ReplaceImages(responseData);
+            // find a way to be able to do this
             //UpdateUIWithLogItem(serverResponse);
-            //Do not save img or partial content
-            if (!serverResponse.GetHeader("Content-Type").Contains("image") 
-                && serverResponse.Method.Contains("200 OK")) cacher.addRequest(clientRequest.Method, responseData);
             await streamReader.WriteMessageWithBufferAsync(clientStream, responseData, settings.BufferSize);
+            OnEndRequest(clientStream, responseData);
+        }
+
+        private void OnEndRequest(NetworkStream clientStream, byte[] responseData)
+        {
+            //Do not save img or partial content
+            if (!serverResponse.GetHeader("Content-Type").Contains("image")
+                && serverResponse.Method.Contains("200 OK")) cacher.addRequest(clientRequest.Method, responseData);
             tcpClient.Dispose();
             clientStream.Dispose();
             clientRequest = null;
             serverResponse = null;
             cachedResponse = null;
         }
+
         private async Task<bool> DoBasicAuth(NetworkStream clientStream)
         {
             string authHeader = clientRequest.GetHeader("Authorization");
@@ -221,18 +215,6 @@ namespace ProxyServer
             serverResponse = null;
             cachedResponse = null;
         }
-        public async Task SendBadRequest(NetworkStream clientStream)
-        {
-            StringBuilder builder = new StringBuilder();
-            builder.AppendLine("HTTP/1.1 400 Bad Request");
-            builder.AppendLine($"Date: {DateTime.Now}");
-            builder.AppendLine();
-            builder.AppendLine("<html><body><h1>Bad Request</h1></body></html>");
-            builder.AppendLine();
-            byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
-            await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
-            serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() };
-        }
         private void StopProxyServer()
         {
             if (tcpListner != null)
@@ -244,6 +226,18 @@ namespace ProxyServer
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             LogItems.Clear();
+        }
+        public async Task SendBadRequest(NetworkStream clientStream)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("HTTP/1.1 400 Bad Request");
+            builder.AppendLine($"Date: {DateTime.Now}");
+            builder.AppendLine();
+            builder.AppendLine("<html><body><h1>Bad Request</h1></body></html>");
+            builder.AppendLine();
+            byte[] badRequestResponse = Encoding.ASCII.GetBytes(builder.ToString());
+            await streamReader.WriteMessageWithBufferAsync(clientStream, badRequestResponse, settings.BufferSize);
+            serverResponse = new HttpRequest(HttpRequest.RESPONSE, settings) { LogItemInfo = builder.ToString() };
         }
     }
 }

@@ -26,16 +26,7 @@ namespace ProxyClasses
         }
         public bool RequestKnown(string request)
         {
-            //check if request is known
-            if (knowRequests.ContainsKey(request))
-            {
-                return true;
-            }
-            else
-            {
-            return false;
-
-            }
+            return knowRequests.ContainsKey(request);
         }
     }
 }

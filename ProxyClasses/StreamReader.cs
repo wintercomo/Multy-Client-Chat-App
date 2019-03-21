@@ -18,12 +18,9 @@ namespace ProxyClasses
                 End = strSource.IndexOf(strEnd, Start);
                 return strSource.Substring(Start, End - Start);
             }
-            else
-            {
-                return "";
-            }
+            else return "";
         }
-        private async Task<int> BinaryMatch(byte[] input, byte[] pattern)
+        private int BinaryMatch(byte[] input, byte[] pattern)
         {
             int sLen = input.Length - pattern.Length + 1;
             for (int i = 0; i < sLen; ++i)
@@ -37,10 +34,7 @@ namespace ProxyClasses
                         break;
                     }
                 }
-                if (match)
-                {
-                    return i;
-                }
+                if (match) return i;
             }
             return -1;
         }
@@ -77,15 +71,8 @@ namespace ProxyClasses
             while (index < messageBytes.Length)
             {
                 int remainingBytes = messageBytes.Length - index;
-                if (remainingBytes < buffer)
-                {
-                    await destinationStream.WriteAsync(messageBytes, index, remainingBytes);
-                }
-                else
-                {
-
-                    await destinationStream.WriteAsync(messageBytes, index, buffer);
-                }
+                if (remainingBytes < buffer) await destinationStream.WriteAsync(messageBytes, index, remainingBytes);
+                else await destinationStream.WriteAsync(messageBytes, index, buffer);
                 index += buffer;
             }
         }
@@ -95,7 +82,7 @@ namespace ProxyClasses
             MemoryStream memory = new MemoryStream(message);
             memory.Position = 0;
             if (message.Length == 0) throw new BadRequestException("Could not determine the stream");
-            var index = await BinaryMatch(message, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
+            var index = BinaryMatch(message, Encoding.ASCII.GetBytes("\r\n\r\n")) + 4;
             var headers = Encoding.ASCII.GetString(message, 0, index);
             memory.Position = index;
             if (headers.Contains("Content-Type: image"))
@@ -121,21 +108,21 @@ namespace ProxyClasses
             memory.Dispose();
             return memory.ToArray();
         }
-        // CHECK IF THIS CAN BE USED
-        // TRY TO GET RID OF MEMORYSTREAM EVERYWHERE!!!
+       
+        // COULD BE USEFULL FOR NEXT ASSIGNMENT
 
-        public async Task<string> GetStringFromReading(int bufferSize, NetworkStream stream)
-        {
-            byte[] buffer = new byte[bufferSize];
-            string result = "";
-            //use memory stream to save all bytes
-            do
-            {
-                int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
-                result += Encoding.ASCII.GetString(buffer, 0, readBytes);
-            } while (stream.DataAvailable);
-            return result;
-        }
+        //public async Task<string> GetStringFromReading(int bufferSize, NetworkStream stream)
+        //{
+        //    byte[] buffer = new byte[bufferSize];
+        //    string result = "";
+        //    //use memory stream to save all bytes
+        //    do
+        //    {
+        //        int readBytes = await stream.ReadAsync(buffer, 0, buffer.Length);
+        //        result += Encoding.ASCII.GetString(buffer, 0, readBytes);
+        //    } while (stream.DataAvailable);
+        //    return result;
+        //}
 
 
     }

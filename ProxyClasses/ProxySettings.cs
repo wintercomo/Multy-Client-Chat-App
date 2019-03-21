@@ -50,7 +50,12 @@ namespace ProxyServer
             get { return bufferSize; }
             set
             {
-                if (SetProperty<int>(ref bufferSize, value))
+                if (value <= 0)
+                {
+                    value = 1;
+                }
+                Console.WriteLine("SETTINNG" + value);
+                if (SetProperty<int>(ref bufferSize, value) && value > 0)
                 {
                     this.bufferSize = value;
                 }
